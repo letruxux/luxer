@@ -119,7 +119,7 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
       fixedLabels.push(match.name);
     }
 
-    const confirmationEmbed = issueToEmbed({
+    const confirmationEmbed = await issueToEmbed({
       title,
       description,
       state: stateObj.name,
@@ -163,7 +163,7 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
     await respMsg.edit({
       content: "✅ **Issue created!**",
       ...embedOf(
-        issueToEmbed({
+        await issueToEmbed({
           title,
           description,
           state: stateObj.name,

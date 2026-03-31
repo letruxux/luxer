@@ -1,11 +1,13 @@
 import { CommandUserError, type Command } from "../handlers/command-handler";
-import { bold, code } from "../utils";
+import { bold, code, quote } from "../utils";
 import { issueToEmbed } from "../utils/linear";
 import { Permission } from "../handlers/permission-handler";
 import type { Message } from "@fluxerjs/core";
 import type { Linear } from "../lib/linear";
 import type { Issue, IssueSearchPayload, IssueSearchResult } from "@linear/sdk";
 import type { EmbedBuilder } from "../utils/embed-builder";
+import { db } from "../db";
+import { issueIdsMessages } from "../db/schema";
 
 async function sendExistingIssue(
   msg: Message,
@@ -18,20 +20,23 @@ async function sendExistingIssue(
     return false;
   }
 
+  const isSearch = !identifier.includes("-");
+
   let content = "";
-  let issues: Issue[] | IssueSearchResult[] = [];
-  if (!identifier.includes("-")) {
+  let searchResults: IssueSearchResult[] = [];
+  let issue: Issue | undefined;
+  if (isSearch) {
     const d = await Promise.all(
       await linear.client
         .searchIssues(identifier, { teamId })
         .then((e) => e.nodes.slice(0, 3)),
     );
     content = `Showing ${d.length} result${d.length === 1 ? "" : "s"} for ${bold(code(identifier))}`;
-    issues = d;
+    searchResults = d;
   }
 
-  if (issues.length === 0) {
-    const issue = await (
+  if (searchResults.length === 0) {
+    issue = await (
       await linear.client.team(teamId)
     )
       .issues({
@@ -41,21 +46,36 @@ async function sendExistingIssue(
     if (!issue) {
       return false;
     }
-    issues = [issue];
   }
 
-  if (issues.length === 0) {
+  const mixed = [...searchResults, issue].filter((e) => e) as (
+    | Issue
+    | IssueSearchResult
+  )[];
+  if (mixed.length === 0) {
     return false;
   }
 
+  const isOnlyOne = mixed.length === 1;
+
+  const comments = isOnlyOne
+    ? await linear.client
+        .comments({
+          filter: { issue: { id: { eq: mixed[0]!.id } } },
+        })
+        .then((e) => e.nodes)
+    : [];
+
   const embeds: EmbedBuilder[] = [];
-  for (const issue of issues) {
+
+  for (const issue of mixed) {
     const creator = issue.creator ? await issue.creator : undefined;
 
-    const embed = issueToEmbed({
+    const embed = await issueToEmbed({
       createdAt: issue.createdAt,
       dueDate: issue.dueDate,
       description: issue.description ?? "(no description)",
+      comments,
       identifier: issue.identifier,
       labels: Object.hasOwn(issue, "labels")
         ? (await (issue as Issue).labels()).nodes.map((l) => l.name)
@@ -68,10 +88,26 @@ async function sendExistingIssue(
       creatorPicture: creator?.avatarUrl ?? undefined,
     });
 
+    if (isOnlyOne) {
+      embed.setFooter({
+        text: `Reply to this message to use commands such as ${quote("comment")} and ${quote("label")}`,
+      });
+    } else {
+      const prefix = await msg.client.handlers.command.getPrefix(msg);
+      embed.setFooter({
+        text: `Send ${quote(`${prefix}issue ${issue.identifier}`)} to view comments, labels and use commands`,
+      });
+    }
+
     embeds.push(embed);
   }
 
-  await msg.reply({ embeds, content });
+  const sentMsg = await msg.reply({ embeds, content });
+  if (isOnlyOne) {
+    await db
+      .insert(issueIdsMessages)
+      .values({ issueId: mixed[0]!.id, messageId: sentMsg.id });
+  }
 
   return true;
 }

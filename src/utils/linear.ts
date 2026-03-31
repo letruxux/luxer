@@ -1,12 +1,14 @@
+import type { Comment } from "@linear/sdk";
 import { bold, code } from ".";
 import { EmbedBuilder } from "./embed-builder";
 
-export function issueToEmbed(issue: {
+export async function issueToEmbed(issue: {
   title: string;
   description: string;
   state: string;
   labels: string[];
   url: string;
+  comments?: Comment[];
   createdAt: Date;
   dueDate?: Date;
   creatorName?: string;
@@ -14,6 +16,32 @@ export function issueToEmbed(issue: {
   updatedAt?: Date;
   identifier?: string;
 }) {
+  const slicedComments = issue.comments?.slice(0, 3) ?? [];
+  const cachedUsers = new Map<string, { name: string; id: string }>();
+  const DEFAULT_USER = { name: "Unknown", id: "Unknown" };
+  async function formatComment(comment: Comment) {
+    const user = comment.userId
+      ? cachedUsers.has(comment.userId)
+        ? cachedUsers.get(comment.userId)!
+        : ((await comment.user?.then((u) => ({
+            name: u.name,
+            id: u.id,
+          }))) ?? DEFAULT_USER)
+      : DEFAULT_USER;
+    if (comment.userId && JSON.stringify(DEFAULT_USER) !== JSON.stringify(user)) {
+      cachedUsers.set(comment.userId, user);
+    }
+
+    return `[📎](${comment.url}) ${user.name}: ${comment.body.replaceAll("\n", " ")}`;
+  }
+  const commentsString =
+    slicedComments.length > 0
+      ? `💬 Comments: (Showing last ${slicedComments.length})
+
+${(await Promise.all(slicedComments.map(formatComment))).join("\n")}
+  `
+      : "";
+
   const embed = new EmbedBuilder()
     .setTitle(issue.identifier ? `[${issue.identifier}] ${issue.title}` : issue.title)
     .setDescription(
@@ -24,6 +52,8 @@ ${bold("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt)
 ${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(issue.dueDate.getTime() / 1000)}:R>` : "(none)"}
 
 ${issue.description}
+
+${commentsString}
       `.trim(),
     )
     .setAuthor({

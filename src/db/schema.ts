@@ -16,6 +16,11 @@ export const userTokens = sqliteTable("user_tokens", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
 });
 
+export const issueIdsMessages = sqliteTable("issue_ids_messages", {
+  issueId: text("issue_id"),
+  messageId: text("message_id").notNull().primaryKey(),
+});
+
 export const rolePermissions = sqliteTable(
   "role_permissions",
   {
