@@ -1,0 +1,28 @@
+{
+  "name": "leen",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "^1.3.11",
+    "drizzle-kit": "^0.31.10"
+  },
+  "scripts": {
+    "start": "bun .",
+    "dev": "bun --watch .",
+    "dbpush": "drizzle-kit push"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@fluxerjs/core": "^1.2.4",
+    "@linear/sdk": "^80.0.0",
+    "@t3-oss/env-core": "^0.13.11",
+    "drizzle-orm": "^0.45.2",
+    "graphql-request": "^7.4.0",
+    "nanoid": "^5.1.7",
+    "string-args-parser": "^1.0.4",
+    "zod": "^4.3.6"
+  }
+}
