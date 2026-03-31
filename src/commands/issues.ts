@@ -6,190 +6,364 @@ import { PaginationOrderBy } from "@linear/sdk";
 import { linearCache } from "@/lib/linear-cache";
 import type { Message } from "@fluxerjs/core";
 import type { Linear } from "@/lib/linear";
-import type { Issue, IssueSearchResult } from "@linear/sdk";
+import type { Issue, IssueSearchResult, Comment } from "@linear/sdk";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
 
 const MAX_SHOWN = 3;
 
-async function sendIssue(msg: Message, args: string[], linear: Linear, teamId: string) {
-  const query = args.join(" ");
-  if (!query) {
-    return false;
-  }
+interface EnrichedIssue {
+  labels: string[];
+  state: string;
+  creatorName?: string;
+  creatorPicture?: string | null;
+}
 
-  const isSearch = !query.includes("-");
+async function getMoreIssueMetadata(
+  issue: Issue | IssueSearchResult,
+  linear: Linear,
+  { isSearchResult = false } = {},
+): Promise<EnrichedIssue> {
+  const issueFull = isSearchResult
+    ? await linearCache.getOrSetIssue(issue.id, linear.client.issue(issue.id))
+    : await linear.client.issue(issue.id);
 
-  let searchResults: IssueSearchResult[] = [];
-  let issue: Issue | undefined;
+  const [labels, state, creator] = await Promise.all([
+    linearCache
+      .getOrSetLabels(issue.id, issueFull.labels())
+      .then((e) => e.nodes.map((l) => l.name)),
+    issue.state
+      ? linearCache.getOrSetState(issue.id, issue.state).then((e) => e.name)
+      : "(no state)",
+    issueFull.creator ? linearCache.getOrSetUser(issue.id, issueFull.creator) : undefined,
+  ]);
 
-  if (isSearch) {
-    const issues = await linear.client
-      .searchIssues(query, { teamId, orderBy: PaginationOrderBy.CreatedAt })
-      .then((e) => e.nodes.slice(0, 3));
-    searchResults = issues;
-  }
+  return {
+    labels,
+    state,
+    creatorName: creator?.name,
+    creatorPicture: creator?.avatarUrl,
+  };
+}
 
-  if (searchResults.length === 0) {
-    issue = await (
-      await linear.client.team(teamId)
-    )
-      .issues({
-        filter: { id: { eq: query } },
-      })
-      .then((e) => e.nodes[0]);
-    if (!issue) {
-      return false;
-    }
-  }
+async function buildIssueEmbed(
+  issue: Issue,
+  linear: Linear,
+  comments: Comment[],
+  msg: Message,
+) {
+  const enriched = await getMoreIssueMetadata(issue, linear);
+  const prefix = await msg.client.handlers.command.getPrefix(msg);
 
-  const mixed = [...searchResults, issue].filter((e) => e) as (
-    | Issue
-    | IssueSearchResult
-  )[];
-  if (mixed.length === 0) {
-    return false;
-  }
-
-  const isOnlyOne = mixed.length === 1;
-
-  const hasCommentPermission = await msg.client.handlers.perms.can(
-    msg.author,
-    msg.guildId!,
-    Permission.READ_COMMENT,
-  );
-
-  const comments =
-    isOnlyOne && hasCommentPermission
-      ? await linear.client
-          .comments({
-            filter: { issue: { id: { eq: mixed[0]!.id } } },
-          })
-          .then((e) => e.nodes.reverse())
-      : [];
-
-  const content = isSearch
-    ? bold(
-        `${mixed.length} result${mixed.length === 1 ? "" : "s"} found for ${code(query)}`,
-      )
-    : "";
-
-  let page = 0;
-  let embedsData: Awaited<ReturnType<typeof getPageEmbeds>> = [];
-
-  async function getPageEmbeds() {
-    const start = page * MAX_SHOWN;
-    const end = start + MAX_SHOWN;
-    const pageIssues = mixed.slice(start, end);
-
-    const embeds = await Promise.all(
-      pageIssues.map(async (issue) => {
-        const issueFull = await linear.client.issue(issue.id);
-        const labels = await linearCache
-          .getOrSetLabels(issue.id, issueFull.labels())
-          .then((e) => e.nodes.map((l) => l.name));
-
-        const state = issue.state
-          ? await linearCache.getOrSetState(issue.id, issue.state).then((e) => e.name)
-          : "(no state)";
-
-        const creator = issueFull.creator
-          ? await linearCache.getOrSetUser(issue.id, issueFull.creator)
-          : undefined;
-
-        return issueToEmbed({
-          createdAt: issue.createdAt,
-          dueDate: issue.dueDate,
-          description: issue.description ?? "(no description)",
-          comments: isOnlyOne ? comments : [],
-          identifier: issue.identifier,
-          labels,
-          state,
-          title: issue.title,
-          url: issue.url,
-          updatedAt: issue.updatedAt,
-          creatorName: creator?.name,
-          creatorPicture: creator?.avatarUrl ?? undefined,
-        });
-      }),
-    );
-
-    for (const embed of embeds) {
-      if (isOnlyOne) {
-        embed.setFooter({
-          text: `Reply to this message to use commands such as ${quote("comment")} and ${quote("label")}`,
-        });
-      } else {
-        const prefix = await msg.client.handlers.command.getPrefix(msg);
-        embed.setFooter({
-          text: `Send ${quote(`${prefix}issue ${(issue as Issue | IssueSearchResult).identifier}`)} to view comments, labels and use commands`,
-        });
-      }
-    }
-
-    return embeds;
-  }
-
-  embedsData = await getPageEmbeds();
-
-  const contentText = isOnlyOne
-    ? content
-    : bold(
-        `${mixed.length} result${mixed.length === 1 ? "" : "s"} found for ${code(query)} - Page ${page + 1}/${Math.ceil(mixed.length / MAX_SHOWN)}`,
-      );
-
-  const sentMessage = await msg.reply({
-    embeds: embedsData,
-    content: contentText,
+  const embed = await issueToEmbed({
+    createdAt: issue.createdAt,
+    dueDate: issue.dueDate,
+    description: issue.description ?? "(no description)",
+    comments,
+    identifier: issue.identifier,
+    labels: enriched.labels,
+    state: enriched.state,
+    title: issue.title,
+    url: issue.url,
+    updatedAt: issue.updatedAt,
+    creatorName: enriched.creatorName,
+    creatorPicture: enriched.creatorPicture ?? undefined,
   });
 
-  if (isOnlyOne) {
-    await db
-      .insert(issueIdsMessages)
-      .values({ issueId: mixed[0]!.id, messageId: sentMessage.id });
-  }
+  embed.setFooter({
+    text: `Reply to this message to use commands such as ${quote(prefix + "comment")} and ${quote(prefix + "label")}`,
+  });
 
-  if (mixed.length <= MAX_SHOWN) {
-    return true;
-  }
+  return embed;
+}
 
-  async function handleReactions() {
+async function buildSearchResultEmbed(
+  issue: IssueSearchResult,
+  linear: Linear,
+  msg: Message,
+) {
+  const enriched = await getMoreIssueMetadata(issue, linear);
+
+  const embed = await issueToEmbed({
+    createdAt: issue.createdAt,
+    dueDate: issue.dueDate,
+    description: issue.description ?? "(no description)",
+    comments: [],
+    identifier: issue.identifier,
+    labels: enriched.labels,
+    state: enriched.state,
+    title: issue.title,
+    url: issue.url,
+    updatedAt: issue.updatedAt,
+    creatorName: enriched.creatorName,
+    creatorPicture: enriched.creatorPicture ?? undefined,
+  });
+
+  const prefix = await msg.client.handlers.command.getPrefix(msg);
+  embed.setFooter({
+    text: `Send ${quote(`${prefix}issue ${issue.identifier}`)} to view comments, labels and use commands`,
+  });
+
+  return embed;
+}
+
+async function getPageEmbeds({
+  issues,
+  linear,
+  comments,
+  msg,
+  page,
+  isSearchResult,
+}: {
+  issues: (Issue | IssueSearchResult)[];
+  linear: Linear;
+  comments: Comment[];
+  msg: Message;
+  page: number;
+  isSearchResult: boolean;
+}) {
+  const start = page * MAX_SHOWN;
+  const end = start + MAX_SHOWN;
+  const pageIssues = issues.slice(start, end);
+
+  return Promise.all(
+    pageIssues.map((issue) => {
+      const isSingleIssue = pageIssues.length === 1 && !isSearchResult;
+      if (isSingleIssue && issue instanceof Object && "id" in issue) {
+        return buildIssueEmbed(issue as Issue, linear, comments, msg);
+      }
+      return buildSearchResultEmbed(issue as IssueSearchResult, linear, msg);
+    }),
+  );
+}
+
+interface DoThePagesParams {
+  msg: Message;
+  sentMessage: Message;
+  issues: (Issue | IssueSearchResult)[];
+  linear: Linear;
+  comments: Comment[];
+  isSearchResult: boolean;
+  page: number;
+  getContent: (page: number) => string;
+}
+
+async function doThePages({
+  msg,
+  sentMessage,
+  issues,
+  linear,
+  comments,
+  isSearchResult,
+  page,
+  getContent,
+}: DoThePagesParams) {
+  async function next() {
     const reactionResult = await msg.client.handlers.reaction.wait(sentMessage, {
       allowedUserIds: [msg.author.id],
       allowedEmojis: ["⬅️", "➡️"],
       timeout: 120_000,
     });
 
-    if (!reactionResult) return true;
+    if (!reactionResult) return;
 
     const emoji = reactionResult.emoji;
 
-    if (emoji.name === "➡️" && (page + 1) * MAX_SHOWN < mixed.length) {
+    if (emoji.name === "➡️" && (page + 1) * MAX_SHOWN < issues.length) {
       page++;
     } else if (emoji.name === "⬅️" && page > 0) {
       page--;
     } else {
-      return handleReactions();
+      return next();
     }
 
-    const newEmbeds = await getPageEmbeds();
+    const newEmbeds = await getPageEmbeds({
+      issues,
+      linear,
+      comments,
+      isSearchResult,
+      msg,
+      page,
+    });
     await sentMessage.removeReaction(emoji.name, msg.author.id);
-    const newContent = bold(
-      `${mixed.length} results found for ${code(query)} - Page ${page + 1}/${Math.ceil(mixed.length / MAX_SHOWN)}`,
-    );
-    await sentMessage.edit({ embeds: newEmbeds, content: newContent });
+    await sentMessage.edit({ embeds: newEmbeds, content: getContent(page) });
 
-    return handleReactions();
+    return next();
   }
 
-  await handleReactions();
+  await next();
+}
+
+async function searchIssues(query: string, linear: Linear, teamId: string) {
+  const isSearch = !query.includes("-");
+
+  if (isSearch) {
+    const results = await linear.client
+      .searchIssues(query, { teamId, orderBy: PaginationOrderBy.CreatedAt })
+      .then((e) => e.nodes.slice(0, 3));
+    return results;
+  }
+
+  const issue = await (
+    await linear.client.team(teamId)
+  )
+    .issues({
+      filter: { id: { eq: query } },
+    })
+    .then((e) => e.nodes[0]);
+
+  return issue ? [issue] : [];
+}
+
+async function viewIssue(issue: Issue, linear: Linear, msg: Message) {
+  const hasCommentPermission = await msg.client.handlers.perms.can(
+    msg.author,
+    msg.guildId!,
+    Permission.READ_COMMENT,
+  );
+
+  const comments: Comment[] = hasCommentPermission
+    ? await linear.client
+        .comments({
+          filter: { issue: { id: { eq: issue.id } } },
+        })
+        .then((e) => e.nodes.reverse())
+    : [];
+
+  const embeds = await getPageEmbeds({
+    issues: [issue],
+    linear,
+    comments,
+    isSearchResult: false,
+    msg,
+    page: 0,
+  });
+
+  const content = bold(`${1} result found for ${code(issue.identifier)}`);
+
+  const sentMessage = await msg.reply({
+    embeds,
+    content,
+  });
+
+  await db
+    .insert(issueIdsMessages)
+    .values({ issueId: issue.id, messageId: sentMessage.id });
+
+  return sentMessage;
+}
+
+async function viewOrSearchIssues(
+  msg: Message,
+  args: string[],
+  linear: Linear,
+  teamId: string,
+) {
+  const query = args.join(" ");
+  if (!query) {
+    return false;
+  }
+
+  const results = await searchIssues(query, linear, teamId);
+  if (results.length === 0) {
+    return false;
+  }
+
+  const isOnlyOne = results.length === 1;
+
+  if (isOnlyOne) {
+    const issue = results[0] as Issue;
+    await viewIssue(issue, linear, msg);
+    return true;
+  }
+
+  const embedsData = await getPageEmbeds({
+    issues: results,
+    linear,
+    comments: [],
+    isSearchResult: true,
+    msg,
+    page: 0,
+  });
+
+  const contentText = bold(
+    `${results.length} results found for ${code(query)} - Page 1/${Math.ceil(results.length / MAX_SHOWN)}`,
+  );
+
+  const sentMessage = await msg.reply({
+    embeds: embedsData,
+    content: contentText,
+  });
+
+  if (results.length <= MAX_SHOWN) {
+    return true;
+  }
+
+  await doThePages({
+    msg,
+    sentMessage,
+    issues: results,
+    linear,
+    comments: [],
+    isSearchResult: true,
+    page: 0,
+    getContent: (p: number) =>
+      bold(
+        `${results.length} results found for ${code(query)} - Page ${p + 1}/${Math.ceil(results.length / MAX_SHOWN)}`,
+      ),
+  });
 
   return true;
 }
 
+async function viewAllIssues(msg: Message, linear: Linear, teamId: string) {
+  const results = await linear.client.issues({
+    filter: { team: { id: { eq: teamId } } },
+    orderBy: PaginationOrderBy.CreatedAt,
+  });
+
+  if (!results.nodes.length) {
+    await msg.reply(textEmbedOf("No issues found."));
+    return;
+  }
+
+  const issues = results.nodes as Issue[];
+
+  const content = bold(
+    `${issues.length} result${issues.length === 1 ? "" : "s"} found - Page 1/${Math.ceil(issues.length / MAX_SHOWN)}`,
+  );
+
+  const embeds = await getPageEmbeds({
+    issues,
+    linear,
+    comments: [],
+    isSearchResult: true,
+    msg,
+    page: 0,
+  });
+  const sentMessage = await msg.reply({ embeds, content });
+
+  if (issues.length <= MAX_SHOWN) {
+    return;
+  }
+
+  await doThePages({
+    msg,
+    sentMessage,
+    issues,
+    linear,
+    comments: [],
+    isSearchResult: true,
+    page: 0,
+    getContent: (p: number) =>
+      bold(
+        `${issues.length} result${issues.length === 1 ? "" : "s"} found - Page ${p + 1}/${Math.ceil(issues.length / MAX_SHOWN)}`,
+      ),
+  });
+}
 export const issues = {
   name: "issues",
-  description: "Find or list issues",
+  description: "Find or list issues (can be used for search, view and view all)",
   requireAccountLinked: true,
   requireConfig: true,
   guildOnly: true,
@@ -205,101 +379,10 @@ export const issues = {
     const query = _rawArgs.join(" ");
 
     if (query) {
-      const success = await sendIssue(msg, _rawArgs, linear, teamId);
+      const success = await viewOrSearchIssues(msg, _rawArgs, linear, teamId);
       if (success) return;
     }
 
-    const searchResults = query.length
-      ? await linear.client.searchIssues(query, {
-          teamId,
-          orderBy: PaginationOrderBy.CreatedAt,
-        })
-      : await linear.client.issues({
-          filter: { team: { id: { eq: teamId } } },
-          orderBy: PaginationOrderBy.CreatedAt,
-        });
-
-    if (!searchResults.nodes.length) {
-      await msg.reply(textEmbedOf("No issues found."));
-      return;
-    }
-
-    let page = 0;
-    async function getPageEmbeds() {
-      const start = page * MAX_SHOWN;
-      const end = start + MAX_SHOWN;
-      const pageIssues = searchResults.nodes.slice(start, end);
-
-      const embeds = await Promise.all(
-        pageIssues.map(async (issue) => {
-          const issueFull = await linear.client.issue(issue.id);
-          const labels = await linearCache
-            .getOrSetLabels(issue.id, issueFull.labels())
-            .then((e) => e.nodes.map((l) => l.name));
-
-          const state = issue.state
-            ? await linearCache.getOrSetState(issue.id, issue.state).then((e) => e.name)
-            : "(no state)";
-
-          const creator = issueFull.creator
-            ? await linearCache.getOrSetUser(issue.id, issueFull.creator)
-            : undefined;
-
-          return issueToEmbed({
-            createdAt: issue.createdAt,
-            dueDate: issue.dueDate,
-            description: issue.description ?? "(no description)",
-            comments: [],
-            identifier: issue.identifier,
-            labels,
-            state,
-            title: issue.title,
-            url: issue.url,
-            updatedAt: issue.updatedAt,
-            creatorName: creator?.name,
-            creatorPicture: creator?.avatarUrl ?? undefined,
-          });
-        }),
-      );
-
-      return embeds;
-    }
-
-    const content = bold(
-      `${searchResults.nodes.length} result${searchResults.nodes.length === 1 ? "" : "s"} found` +
-        (query.length ? ` for ${code(query)}` : "") +
-        ` - Page ${page + 1}/${Math.ceil(searchResults.nodes.length / MAX_SHOWN)}`,
-    );
-
-    const embeds = await getPageEmbeds();
-    const sentMessage = await msg.reply({ embeds, content });
-
-    async function handleReactions() {
-      const reactionResult = await msg.client.handlers.reaction.wait(sentMessage, {
-        allowedUserIds: [msg.author.id],
-        allowedEmojis: ["⬅️", "➡️"],
-        timeout: 120_000,
-      });
-
-      if (!reactionResult) return;
-
-      const emoji = reactionResult.emoji;
-
-      if (emoji.name === "➡️" && (page + 1) * MAX_SHOWN < searchResults.nodes.length) {
-        page++;
-      } else if (emoji.name === "⬅️" && page > 0) {
-        page--;
-      } else {
-        return;
-      }
-
-      const newEmbeds = await getPageEmbeds();
-      await sentMessage.removeReaction(emoji.name, msg.author.id);
-      await sentMessage.edit({ embeds: newEmbeds, content });
-
-      return handleReactions();
-    }
-
-    await handleReactions();
+    await viewAllIssues(msg, linear, teamId);
   },
 } satisfies Command;

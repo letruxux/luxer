@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { rolePermissions } from "@/db/schema";
-import type { Role, User } from "@fluxerjs/core";
+import { PermissionFlags, type Role, type User } from "@fluxerjs/core";
 import { code, fixCasing } from "@/utils";
 
 export enum Permission {
@@ -128,6 +128,14 @@ export class PermissionHandler {
   }
 
   async can(user: User, guildId: string, permission: Permission) {
+    const guild =
+      user.client.guilds.get(guildId) ?? (await user.client.guilds.fetch(guildId));
+    if (guild) {
+      const member = guild.members.get(user.id) ?? (await guild.fetchMember(user.id));
+      if (member.permissions.has(PermissionFlags.Administrator)) {
+        return true;
+      }
+    }
     return this.get(user, guildId).then((perms) => perms[permission]);
   }
 }

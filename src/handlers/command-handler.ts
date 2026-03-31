@@ -171,7 +171,9 @@ export class CommandHandler {
       }
 
       if (command.adminOnly) {
-        const member = msg.guild?.members.get(msg.author.id);
+        const member =
+          msg.guild?.members.get(msg.author.id) ??
+          (await msg.guild?.fetchMember(msg.author.id));
         if (!member?.permissions.has(PermissionFlags.Administrator)) {
           await msg.reply(
             this.buildErrorPayload(`This command requires administrator perms!`),
