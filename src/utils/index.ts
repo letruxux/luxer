@@ -1,3 +1,5 @@
+import type { EmbedBuilder } from "@fluxerjs/core";
+
 export function code(str: string) {
   return `\`${str}\``;
 }
@@ -10,4 +12,8 @@ function capFirst(str: string): string {
 export function fixCasing(str: string) {
   const withSpaces = str.replace(/_/g, " ");
   return capFirst(withSpaces.trim());
+}
+
+export function embedOf(embed: EmbedBuilder) {
+  return { embeds: [embed] };
 }

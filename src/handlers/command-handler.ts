@@ -9,7 +9,7 @@ import { guildConfigs, userTokens } from "../db/schema";
 import logger from "../lib/logger";
 import { EmbedBuilder } from "../utils/embed-builder";
 import { Permission, type PermissionSet } from "./permission-handler";
-import { code, fixCasing } from "../utils";
+import { code, embedOf, fixCasing } from "../utils";
 
 export interface Command {
   aliases?: string[];
@@ -98,9 +98,7 @@ export class CommandHandler {
   }
 
   public buildErrorPayload(msg: string) {
-    return {
-      embeds: [this.buildErrorEmbed(msg)],
-    };
+    return embedOf(this.buildErrorEmbed(msg));
   }
 
   async handleError(msg: Message, err: Error) {

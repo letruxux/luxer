@@ -3,8 +3,9 @@ import { db } from "../db";
 import { guildConfigs } from "../db/schema";
 import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code } from "../utils";
+import { code, embedOf } from "../utils";
 import yargsParser from "yargs-parser";
+import { EmbedBuilder } from "../utils/embed-builder";
 
 const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
 
@@ -33,8 +34,7 @@ export const setup = {
     }
 
     if (!key) {
-      await msg.reply(code("l!setup --key <KEY>"));
-      return;
+      throw new CommandUserError(code("l!setup --key <KEY>"));
     }
 
     const linearClient = new Linear(key);
@@ -54,9 +54,9 @@ export const setup = {
     const emojis = NUMEMOJIS.slice(0, teams.length);
     const teamList = teams.map((team, i) => `${emojis[i]} **${team.name}**`).join("\n");
 
-    const message = await channel.send({
-      content: `### Select your team:\n${teamList}`,
-    });
+    const message = await channel.send(
+      embedOf(new EmbedBuilder().setTitle("Select your team").setDescription(teamList)),
+    );
 
     for (const emoji of emojis) {
       await message.react(emoji).catch(() => {});
@@ -69,13 +69,14 @@ export const setup = {
     });
 
     if (!reaction) {
-      await channel.send({
-        content: `Took too long!!!`,
-      });
+      await channel.send(
+        msg.client.handlers.command.buildErrorPayload(
+          "Took too long! Please do the command again",
+        ),
+      );
       return;
     }
 
-    /* remove all reactions */
     message.removeAllReactions().catch(() => {});
 
     const selectedIndex = emojis.indexOf(reaction.emoji.name ?? "");
@@ -90,8 +91,8 @@ export const setup = {
         set: { teamId: selectedTeam.id },
       });
 
-    await message.edit({
-      content: `Ready!`,
-    });
+    await message.edit(
+      embedOf(new EmbedBuilder().setColor(0x00ff00).setDescription("Ready!")),
+    );
   },
 } satisfies Command;
