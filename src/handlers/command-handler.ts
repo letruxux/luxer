@@ -235,6 +235,7 @@ export class CommandHandler {
         `${msg.author.username} ran ${prefix}${name} in ${msg.guild?.name ?? "DMs"}`,
       );
 
+      msg.channel?.sendTyping();
       await command
         .execute(msg, rawArgs, extra)
         .catch((err) => this.handleError(msg, err));
