@@ -4,10 +4,12 @@ import {
   type Message,
   type MessageReaction,
 } from "@fluxerjs/core";
+import logger from "../lib/logger";
 
 export const YES_EMOJI = "✅";
 export const NO_EMOJI = "❌";
 export const YES_NO_EMOJIS = [YES_EMOJI, NO_EMOJI];
+export const NUMBER_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 
 export interface MessageWaitingForReaction {
   allowedUserIds: string[];
@@ -23,6 +25,7 @@ export default class ReactionHandler {
   client: Client;
 
   waitingForReactions: Map<string, MessageWaitingForReaction[]> = new Map();
+  private reactionsCache: Map<string, Set<string>> = new Map();
 
   constructor(client: Client) {
     this.client = client;
@@ -104,11 +107,19 @@ if (reaction.emoji.name === "👍") {
       timeout: number;
     },
   ): Promise<MessageReaction | null> {
-    return new Promise((resolve) => {
-      /* add the reactions */
-      for (const emoji of data.allowedEmojis) {
-        message.react(emoji);
-      }
+    return new Promise(async (resolve) => {
+      (async () => {
+        for (const emoji of data.allowedEmojis) {
+          const cached = this.reactionsCache.get(message.id) ?? new Set();
+
+          if (cached.has(emoji)) continue;
+
+          await message.react(emoji);
+
+          cached.add(emoji);
+          this.reactionsCache.set(message.id, cached);
+        }
+      })();
       const id = Math.random().toString(36).slice(2, 10);
 
       const timeout = setTimeout(() => {

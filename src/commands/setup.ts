@@ -4,8 +4,7 @@ import { guildConfigs } from "../db/schema";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 import { embedOf } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
-
-const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+import { NUMBER_EMOJIS } from "../handlers/reaction-handler";
 
 export const setup = {
   name: "setup",
@@ -38,7 +37,7 @@ export const setup = {
       throw new CommandUserError("No teams found on your Linear account");
     }
 
-    const emojis = NUMEMOJIS.slice(0, teams.length);
+    const emojis = NUMBER_EMOJIS.slice(0, teams.length);
     const teamList = teams.map((team, i) => `${emojis[i]} **${team.name}**`).join("\n");
 
     const message = await channel.send(

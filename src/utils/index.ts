@@ -1,6 +1,7 @@
-import type { EmbedBuilder } from "@fluxerjs/core";
 import type { Options } from "yargs-parser";
 import yargsParser from "yargs-parser";
+import { EmbedBuilder } from "./embed-builder";
+import type { PermissionSet } from "../handlers/permission-handler";
 
 export function code(str: string) {
   return `\`${str}\``;
@@ -26,6 +27,16 @@ export function fixCasing(str: string) {
 
 export function embedOf(embed: EmbedBuilder) {
   return { embeds: [embed] };
+}
+
+export function textEmbedOf(
+  text: string,
+  { title, color }: { title?: string; color?: number } = {},
+) {
+  const e = new EmbedBuilder().setDescription(text);
+  if (title) e.setTitle(title);
+  if (color) e.setColor(color);
+  return embedOf(e);
 }
 
 export function yargs(args: string[], config: Options) {
@@ -63,4 +74,12 @@ export function dueToSeconds(str: string): number | null {
   if (!(u in units)) return null;
 
   return num * units[u]!;
+}
+
+export function isAll(perms: PermissionSet, value: boolean) {
+  return Object.values(perms).every((v) => v === value);
+}
+
+export function countOccurrences(list: boolean[], value: boolean) {
+  return list.filter((e) => e === value).length;
 }

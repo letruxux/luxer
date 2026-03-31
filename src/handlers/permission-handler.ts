@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { rolePermissions } from "../db/schema";
 import type { Role, User } from "@fluxerjs/core";
+import { code, fixCasing } from "../utils";
 
 export enum Permission {
   READ_ISSUE = "read_issue",
@@ -20,8 +21,14 @@ export enum Permission {
 
 export type PermissionSet = Record<Permission, boolean>;
 
+export function permissionSetToString(perms: PermissionSet) {
+  return Object.entries(perms)
+    .map(([k, v], i) => `${code((i + 1).toString())} ${fixCasing(k)}: ${v ? "✅" : "❌"}`)
+    .join("\n");
+}
+
 export class PermissionHandler {
-  private parsePermissionRow(row: string | undefined): PermissionSet {
+  parsePermissionRow(row: string | undefined): PermissionSet {
     const allPermissions = Object.values(Permission) as Permission[];
 
     const acc: PermissionSet = allPermissions.reduce((obj, perm) => {
@@ -100,21 +107,24 @@ export class PermissionHandler {
       newPermissions[perm] = value;
     }
 
+    const newPermissionsRaw = Object.entries(newPermissions)
+      .filter(([_, v]) => v)
+      .map(([k]) => k)
+      .join(",");
+
     await db
-      .update(rolePermissions)
-      .set({
-        permissions: Object.entries(newPermissions)
-          .filter(([_, v]) => v)
-          .map(([k]) => k)
-          .join(","),
+      .insert(rolePermissions)
+      .values({
+        roleId: role.id,
+        guildId: role.guildId,
+        permissions: newPermissionsRaw,
       })
-      .where(
-        and(
-          eq(rolePermissions.roleId, role.id),
-          eq(rolePermissions.guildId, role.guildId),
-        ),
-      )
-      .execute();
+      .onConflictDoUpdate({
+        target: [rolePermissions.roleId, rolePermissions.guildId],
+        set: {
+          permissions: newPermissionsRaw,
+        },
+      });
   }
 
   async can(user: User, guildId: string, permission: Permission) {

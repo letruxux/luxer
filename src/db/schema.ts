@@ -8,7 +8,7 @@ export const guildConfigs = sqliteTable("guild_configs", {
 });
 
 export const userTokens = sqliteTable("user_tokens", {
-  userId: text("user_id").primaryKey(),
+  userId: text("user_id").primaryKey().notNull(),
   linearToken: text("linear_token").notNull(),
   linearRefreshToken: text("linear_refresh_token"),
   linearTokenExpiresAt: integer("linear_token_expires_at", { mode: "timestamp" }),
@@ -17,15 +17,15 @@ export const userTokens = sqliteTable("user_tokens", {
 });
 
 export const issueIdsMessages = sqliteTable("issue_ids_messages", {
-  issueId: text("issue_id"),
+  issueId: text("issue_id").notNull(),
   messageId: text("message_id").notNull().primaryKey(),
 });
 
 export const rolePermissions = sqliteTable(
   "role_permissions",
   {
-    roleId: text("role_id"),
-    guildId: text("guild_id"),
+    roleId: text("role_id").notNull(),
+    guildId: text("guild_id").notNull(),
     permissions: text("permissions").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
     updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
