@@ -4,7 +4,12 @@ import { issueToEmbed } from "../utils/linear";
 import { Permission } from "../handlers/permission-handler";
 import type { Message } from "@fluxerjs/core";
 import type { Linear } from "../lib/linear";
-import type { Issue, IssueSearchPayload, IssueSearchResult } from "@linear/sdk";
+import {
+  PaginationOrderBy,
+  type Issue,
+  type IssueSearchPayload,
+  type IssueSearchResult,
+} from "@linear/sdk";
 import type { EmbedBuilder } from "../utils/embed-builder";
 import { db } from "../db";
 import { issueIdsMessages } from "../db/schema";
@@ -28,7 +33,7 @@ async function sendExistingIssue(
   if (isSearch) {
     const d = await Promise.all(
       await linear.client
-        .searchIssues(identifier, { teamId })
+        .searchIssues(identifier, { teamId, orderBy: PaginationOrderBy.CreatedAt })
         .then((e) => e.nodes.slice(0, 3)),
     );
     content = `Showing ${d.length} result${d.length === 1 ? "" : "s"} for ${bold(code(identifier))}`;
@@ -63,7 +68,7 @@ async function sendExistingIssue(
         .comments({
           filter: { issue: { id: { eq: mixed[0]!.id } } },
         })
-        .then((e) => e.nodes)
+        .then((e) => e.nodes.reverse())
     : [];
 
   const embeds: EmbedBuilder[] = [];

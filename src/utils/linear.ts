@@ -32,12 +32,11 @@ export async function issueToEmbed(issue: {
       cachedUsers.set(comment.userId, user);
     }
 
-    return `[📎](${comment.url}) ${user.name}: ${comment.body.replaceAll("\n", " ")}`;
+    return `[📎](${comment.url}) ${user.name}: ${comment.body.replaceAll("\n", " ")} (<t:${Math.floor(comment.createdAt.getTime() / 1000)}:R>)`;
   }
   const commentsString =
     slicedComments.length > 0
-      ? `💬 Comments: (Showing last ${slicedComments.length})
-
+      ? `**💬 Comments**: (Showing last ${slicedComments.length})
 ${(await Promise.all(slicedComments.map(formatComment))).join("\n")}
   `
       : "";
@@ -51,7 +50,7 @@ ${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}
 ${bold("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt).getTime() / 1000)}:R>`}
 ${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(issue.dueDate.getTime() / 1000)}:R>` : "(none)"}
 
-${issue.description}
+${issue.description.slice(0, 2000)}${issue.description.length > 2000 ? `... [more ${issue.description.length - 2000} characters]` : ""}
 
 ${commentsString}
       `.trim(),
