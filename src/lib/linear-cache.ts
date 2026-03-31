@@ -6,11 +6,14 @@ import type {
   IssueLabel,
   WorkflowState as WorkflowStateType,
 } from "@linear/sdk";
+import { hexToTerminal, Logger } from "./logger";
 
 type CacheEntry<T> = {
   value: Promise<T>;
   expiresAt: number;
 };
+
+const logger = new Logger(`${hexToTerminal("#2f9")}[cache]${Logger.resetColor}`, "#fff");
 
 class TimedCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
@@ -35,10 +38,16 @@ class TimedCache<T> {
     this.cache.set(id, { value: promise, expiresAt: Date.now() + this.ttlMs });
   }
 
+  invalidate(id: string) {
+    this.cache.delete(id);
+  }
+
   async getOrSet(id: string, promise: Promise<T>): Promise<T> {
     const existing = await this.get(id);
+    logger.dim("! using cached item for", this.name);
     if (existing) return existing;
 
+    logger.dim("X cache failed for", this.name);
     this.set(id, promise);
     return promise;
   }
@@ -73,6 +82,14 @@ class LinearCache {
 
   getOrSetUserTeams = (userId: string, promise: Promise<string[]>) =>
     this.userTeamsCache.getOrSet(userId, promise);
+
+  invalidateUserTeams = (userId: string) => this.userTeamsCache.invalidate(userId);
+  invalidateTeamLabels = (teamId: string) => this.teamLabelsCache.invalidate(teamId);
+  invalidateTeamStates = (teamId: string) => this.teamStatesCache.invalidate(teamId);
+  invalidateIssue = (issueId: string) => this.issueCache.invalidate(issueId);
+  invalidateLabels = (issueId: string) => this.issueLabelsCache.invalidate(issueId);
+  invalidateState = (issueId: string) => this.issueStateCache.invalidate(issueId);
+  invalidateUser = (userId: string) => this.userCache.invalidate(userId);
 }
 
 export const linearCache = new LinearCache();
