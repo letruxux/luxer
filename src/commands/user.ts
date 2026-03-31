@@ -1,9 +1,9 @@
 import { Message } from "@fluxerjs/core";
-import { db } from "../db";
-import { Linear } from "../lib/linear";
-import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code } from "../utils";
-import { EmbedBuilder } from "../utils/embed-builder";
+import { db } from "@/db";
+import { Linear } from "@/lib/linear";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { code } from "@/utils";
+import { EmbedBuilder } from "@/utils/embed-builder";
 
 export const user = {
   name: "user",

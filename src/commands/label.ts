@@ -1,10 +1,10 @@
-import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code, embedOf, yargs } from "../utils";
-import { db } from "../db";
-import { issueIdsMessages } from "../db/schema";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { code, embedOf, yargs } from "@/utils";
+import { db } from "@/db";
+import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { EmbedBuilder } from "../utils/embed-builder";
-import { Permission } from "../handlers/permission-handler";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { Permission } from "@/handlers/permission-handler";
 
 export const label = {
   name: "label",

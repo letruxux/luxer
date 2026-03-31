@@ -3,13 +3,13 @@
 import { PermissionFlags, type Client, type Message, type User } from "@fluxerjs/core";
 import { FluxerAPIError, HTTPError } from "@fluxerjs/rest";
 import { parseArgs } from "string-args-parser";
-import { db } from "../db";
-import { guildConfigs, userTokens } from "../db/schema";
-import logger from "../lib/logger";
-import { EmbedBuilder } from "../utils/embed-builder";
+import { db } from "@/db";
+import { guildConfigs, userTokens } from "@/db/schema";
+import logger from "@/lib/logger";
+import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "./permission-handler";
-import { code, embedOf, fixCasing } from "../utils";
-import { Linear } from "../lib/linear";
+import { code, embedOf, fixCasing } from "@/utils";
+import { Linear } from "@/lib/linear";
 
 export interface CommandExtra {
   config?: GuildConfig;

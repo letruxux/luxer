@@ -1,6 +1,6 @@
 import { Message } from "@fluxerjs/core";
-import { db } from "../db";
-import { CommandUserError, type Command } from "../handlers/command-handler";
+import { db } from "@/db";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
 
 export const settings = {
   name: "settings",

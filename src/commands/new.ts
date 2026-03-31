@@ -1,11 +1,11 @@
-import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code, dueToSeconds, embedOf, yargs } from "../utils";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { code, dueToSeconds, embedOf, yargs } from "@/utils";
 import type { Options } from "yargs-parser";
 import z from "zod";
-import { issueToEmbed } from "../utils/linear";
-import { Permission } from "../handlers/permission-handler";
-import { EmbedBuilder } from "../utils/embed-builder";
-import { YES_EMOJI, YES_NO_EMOJIS } from "../handlers/reaction-handler";
+import { issueToEmbed } from "@/utils/linear";
+import { Permission } from "@/handlers/permission-handler";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 
 function parseArgs(rawArgs: string[]) {
   const argsOpt: Options = {

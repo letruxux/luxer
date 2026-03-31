@@ -1,10 +1,10 @@
 import { TextChannel } from "@fluxerjs/core";
-import { db } from "../db";
-import { guildConfigs } from "../db/schema";
-import { CommandUserError, type Command } from "../handlers/command-handler";
-import { embedOf } from "../utils";
-import { EmbedBuilder } from "../utils/embed-builder";
-import { NUMBER_EMOJIS } from "../handlers/reaction-handler";
+import { db } from "@/db";
+import { guildConfigs } from "@/db/schema";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { embedOf } from "@/utils";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { NUMBER_EMOJIS } from "@/handlers/reaction-handler";
 
 export const setup = {
   name: "setup",

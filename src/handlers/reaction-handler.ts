@@ -4,7 +4,7 @@ import {
   type Message,
   type MessageReaction,
 } from "@fluxerjs/core";
-import logger from "../lib/logger";
+import logger from "@/lib/logger";
 
 export const YES_EMOJI = "✅";
 export const NO_EMOJI = "❌";

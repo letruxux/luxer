@@ -1,7 +1,7 @@
 import type { Options } from "yargs-parser";
 import yargsParser from "yargs-parser";
 import { EmbedBuilder } from "./embed-builder";
-import type { PermissionSet } from "../handlers/permission-handler";
+import type { PermissionSet } from "@/handlers/permission-handler";
 
 export function code(str: string) {
   return `\`${str}\``;

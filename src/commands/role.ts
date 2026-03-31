@@ -1,11 +1,11 @@
-import { db } from "../db";
-import { rolePermissions } from "../db/schema";
-import { type Command } from "../handlers/command-handler";
+import { db } from "@/db";
+import { rolePermissions } from "@/db/schema";
+import { type Command } from "@/handlers/command-handler";
 import { eq } from "drizzle-orm";
-import { countOccurrences, embedOf, isAll, textEmbedOf } from "../utils";
-import { EmbedBuilder } from "../utils/embed-builder";
-import { Permission, permissionSetToString } from "../handlers/permission-handler";
-import { NUMBER_EMOJIS } from "../handlers/reaction-handler";
+import { countOccurrences, embedOf, isAll, textEmbedOf } from "@/utils";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { Permission, permissionSetToString } from "@/handlers/permission-handler";
+import { NUMBER_EMOJIS } from "@/handlers/reaction-handler";
 
 export const role = {
   name: "role",

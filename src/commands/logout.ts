@@ -1,10 +1,10 @@
-import { type Command } from "../handlers/command-handler";
-import { embedOf } from "../utils";
-import { db } from "../db";
-import { EmbedBuilder } from "../utils/embed-builder";
-import { userTokens } from "../db/schema";
+import { type Command } from "@/handlers/command-handler";
+import { embedOf } from "@/utils";
+import { db } from "@/db";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { userTokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { YES_EMOJI, YES_NO_EMOJIS } from "../handlers/reaction-handler";
+import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 
 export const logout = {
   name: "logout",

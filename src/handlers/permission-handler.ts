@@ -1,8 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { db } from "../db";
-import { rolePermissions } from "../db/schema";
+import { db } from "@/db";
+import { rolePermissions } from "@/db/schema";
 import type { Role, User } from "@fluxerjs/core";
-import { code, fixCasing } from "../utils";
+import { code, fixCasing } from "@/utils";
 
 export enum Permission {
   READ_ISSUE = "read_issue",

@@ -1,13 +1,13 @@
-import { CommandUserError, type Command } from "../handlers/command-handler";
-import { bold, code, quote } from "../utils";
-import { issueToEmbed } from "../utils/linear";
-import { Permission } from "../handlers/permission-handler";
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { bold, code, quote } from "@/utils";
+import { issueToEmbed } from "@/utils/linear";
+import { Permission } from "@/handlers/permission-handler";
 import type { Message } from "@fluxerjs/core";
-import type { Linear } from "../lib/linear";
+import type { Linear } from "@/lib/linear";
 import { PaginationOrderBy, type Issue, type IssueSearchResult } from "@linear/sdk";
-import type { EmbedBuilder } from "../utils/embed-builder";
-import { db } from "../db";
-import { issueIdsMessages } from "../db/schema";
+import type { EmbedBuilder } from "@/utils/embed-builder";
+import { db } from "@/db";
+import { issueIdsMessages } from "@/db/schema";
 
 async function sendExistingIssue(
   msg: Message,

@@ -1,9 +1,9 @@
-import { db } from "../db";
-import { guildConfigs } from "../db/schema";
-import { type Command } from "../handlers/command-handler";
+import { db } from "@/db";
+import { guildConfigs } from "@/db/schema";
+import { type Command } from "@/handlers/command-handler";
 import { eq } from "drizzle-orm";
-import { embedOf } from "../utils";
-import { EmbedBuilder } from "../utils/embed-builder";
+import { embedOf } from "@/utils";
+import { EmbedBuilder } from "@/utils/embed-builder";
 
 export const reset = {
   name: "reset",
