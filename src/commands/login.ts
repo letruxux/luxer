@@ -13,7 +13,6 @@ import { EmbedBuilder } from "../utils/embed-builder";
 export const login = {
   name: "login",
   description: "Login to Linear",
-  guildOnly: true,
   async execute(msg) {
     const userToken = await db.query.userTokens.findFirst({
       where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),

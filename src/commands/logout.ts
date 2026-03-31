@@ -8,7 +8,6 @@ import { eq } from "drizzle-orm";
 export const logout = {
   name: "logout",
   description: "Logout from Linear",
-  guildOnly: true,
   requireAccountLinked: true,
   async execute(msg, _, {}) {
     const respMsg = await msg.reply({
