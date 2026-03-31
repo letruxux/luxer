@@ -11,6 +11,7 @@ import ReactionHandler from "./handlers/reaction-handler";
 import logger from "./lib/logger";
 import { PermissionHandler } from "./handlers/permission-handler";
 import { authApp } from "./login-http";
+import { newIssue } from "./commands/new";
 import { issue } from "./commands/issue";
 
 const client = new Client({
@@ -33,6 +34,7 @@ cmdHandler.register(setup);
 cmdHandler.register(reset);
 cmdHandler.register(login);
 cmdHandler.register(user);
+cmdHandler.register(newIssue);
 cmdHandler.register(issue);
 
 client.once("ready", async () => {
