@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { userPermissions } from "../db/schema";
+import { rolePermissions } from "../db/schema";
 
 export enum Permission {
   READ_ISSUE = "read_issue",
@@ -39,9 +39,9 @@ export class PermissionHandler {
   async get(userId: string, guildId: string): Promise<PermissionSet> {
     const row = await db
       .select()
-      .from(userPermissions)
+      .from(rolePermissions)
       .where(
-        and(eq(userPermissions.userId, userId), eq(userPermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
       )
       .limit(1)
       .execute()
@@ -53,9 +53,9 @@ export class PermissionHandler {
   async update(userId: string, guildId: string, permissions: Partial<PermissionSet>) {
     const row = await db
       .select()
-      .from(userPermissions)
+      .from(rolePermissions)
       .where(
-        and(eq(userPermissions.userId, userId), eq(userPermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
       )
       .limit(1)
       .execute()
@@ -68,7 +68,7 @@ export class PermissionHandler {
     }
 
     await db
-      .update(userPermissions)
+      .update(rolePermissions)
       .set({
         permissions: Object.entries(newPermissions)
           .filter(([_, v]) => v)
@@ -76,7 +76,7 @@ export class PermissionHandler {
           .join(","),
       })
       .where(
-        and(eq(userPermissions.userId, userId), eq(userPermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
       )
       .execute();
   }

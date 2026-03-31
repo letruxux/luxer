@@ -16,16 +16,16 @@ export const userTokens = sqliteTable("user_tokens", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
 });
 
-export const userPermissions = sqliteTable(
-  "user_permissions",
+export const rolePermissions = sqliteTable(
+  "role_permissions",
   {
-    userId: text("user_id"),
+    roleId: text("role_id"),
     guildId: text("guild_id"),
     permissions: text("permissions").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
     updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.guildId] })],
+  (table) => [primaryKey({ columns: [table.roleId, table.guildId] })],
 );
 
 export type GuildConfig = typeof guildConfigs.$inferSelect;
