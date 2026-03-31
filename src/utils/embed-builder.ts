@@ -3,7 +3,8 @@ import { EmbedBuilder as OldEmbedBuilder } from "@fluxerjs/core";
 
 const DEFAULT_FOOTER = {
   text: "linear.app",
-  iconURL: "https://linear.app/favicon.ico",
+  iconURL:
+    "https://fluxerusercontent.com/avatars/1488524605469763558/88b0a0fc.webp?size=160",
 } satisfies EmbedFooterOptions;
 
 export class EmbedBuilder extends OldEmbedBuilder {
