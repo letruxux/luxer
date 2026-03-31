@@ -74,7 +74,7 @@ authApp.get("/callback", async (c) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      grant_type: "authorization code",
+      grant_type: "authorization_code",
       code,
       redirect_uri: env.LINEAR_REDIRECT_URI!,
       client_id: env.LINEAR_CLIENT_ID!,
@@ -85,7 +85,7 @@ authApp.get("/callback", async (c) => {
 
   if (!tokenResponse.ok) {
     console.error("token exc fail:", await tokenResponse.text());
-    return c.text("token exchange fila");
+    return c.text("token exchange fail");
   }
 
   const tokens = (await tokenResponse.json()) as OAuthTokens;

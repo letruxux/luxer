@@ -4,10 +4,13 @@ import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 import { code } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
+import { Permission } from "../handlers/permission-handler";
 
 export const user = {
   name: "user",
   description: "Get user",
+  requireAccountLinked: true,
+  requirePerms: [Permission.READ_ISSUE],
   async execute(msg: Message, args: Map<string, string>) {
     const tokenRecord = await db.query.userTokens.findFirst({
       where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),

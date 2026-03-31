@@ -8,6 +8,8 @@ import { db } from "../db";
 import { guildConfigs, userTokens } from "../db/schema";
 import logger from "../lib/logger";
 import { EmbedBuilder } from "../utils/embed-builder";
+import { Permission, type PermissionSet } from "./permission-handler";
+import { code, fixCasing } from "../utils";
 
 export interface Command {
   aliases?: string[];
@@ -24,6 +26,8 @@ export interface Command {
   adminOnly?: boolean;
   name: string;
   requireConfig?: boolean;
+  requireAccountLinked?: boolean;
+  requirePerms?: Permission[];
 }
 
 export type GuildConfig = typeof guildConfigs.$inferSelect;
@@ -192,6 +196,22 @@ export class CommandHandler {
         }
       }
 
+      if (command.requirePerms) {
+        const perms = await this.client.handlers.perms.get(msg.author.id, msg.guild!.id);
+        const missingPerms = command.requirePerms.filter((p) => !perms[p]);
+        if (missingPerms.length > 0) {
+          await msg.reply(
+            this.buildErrorPayload(
+              `You need the following permissions to use this command: ${missingPerms
+                .map(fixCasing)
+                .map(code)
+                .join(", ")}`,
+            ),
+          );
+          return true;
+        }
+      }
+
       if (command.requireConfig && msg.guild) {
         const config = await db.query.guildConfigs.findFirst({
           where: (tbl, { eq }) => eq(tbl.guildId, msg.guild!.id),
@@ -202,6 +222,14 @@ export class CommandHandler {
           );
           return true;
         }
+        const flags = this.parseArgsToFlags(rawArgs);
+        await command
+          .execute(msg, flags, rawArgs, config)
+          .catch((err) => this.handleError(msg, err));
+        return true;
+      }
+
+      if (command.requireAccountLinked) {
         const userToken = await db.query.userTokens.findFirst({
           where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
         });
@@ -211,11 +239,6 @@ export class CommandHandler {
           );
           return true;
         }
-        const flags = this.parseArgsToFlags(rawArgs);
-        await command
-          .execute(msg, flags, rawArgs, config)
-          .catch((err) => this.handleError(msg, err));
-        return true;
       }
 
       logger.info(

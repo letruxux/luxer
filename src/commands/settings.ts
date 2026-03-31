@@ -7,6 +7,7 @@ export const settings = {
   description: "Setup permissions",
   guildOnly: true,
   adminOnly: true,
+  requireConfig: true,
   async execute(msg: Message, args: Map<string, string>) {
     const guildId = msg.guild!.id;
 

@@ -3,13 +3,10 @@ import { nanoid } from "nanoid";
 import { env } from "../env";
 import { type Command } from "../handlers/command-handler";
 import {
-  authApp,
   generateCodeVerifier,
   generateCodeChallenge,
   addStateLogin,
 } from "../login-http";
-
-export { authApp };
 
 export const login = {
   name: "login",

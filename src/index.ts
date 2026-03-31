@@ -4,12 +4,13 @@ import { env } from "./env";
 import { CommandHandler } from "./handlers/command-handler";
 import { setup } from "./commands/setup";
 import { reset } from "./commands/reset";
-import { login, authApp } from "./commands/login";
+import { login } from "./commands/login";
 import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
 import logger from "./lib/logger";
 import { PermissionHandler } from "./handlers/permission-handler";
+import { authApp } from "./login-http";
 
 const client = new Client({
   intents: 0,
