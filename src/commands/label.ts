@@ -67,14 +67,15 @@ export const label = {
     if (!success) throw new CommandUserError("Linear API error");
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
+    const issueResult = await issue!;
     await msg.reply(
       embedOf(
         new EmbedBuilder()
           .setDescription(
-            `Labels updated! Run \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+            `Labels updated! Run \`${prefix}issue ${issue ? issueResult.identifier : issueId}\` to view the updated issue`,
           )
           .setDescription(
-            `Labels updated to ${labels.map(code).join(", ")}!\nRun \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+            `Labels updated to ${labels.map(code).join(", ")}!\nRun \`${prefix}issue ${issue ? issueResult.identifier : issueId}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

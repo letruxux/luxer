@@ -50,11 +50,12 @@ export const due = {
     if (!success) throw new CommandUserError("Linear API error");
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
+    const resultIssue = await issue!;
     await msg.reply(
       embedOf(
         new EmbedBuilder()
           .setDescription(
-            `Due date updated to <t:${Math.floor(new Date((await issue)!.dueDate).getTime() / 1000)}:d>!\nRun \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+            `Due date updated to <t:${Math.floor(new Date(resultIssue.dueDate).getTime() / 1000)}:d>!\nRun \`${prefix}issue ${issue ? resultIssue.identifier : issueId}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

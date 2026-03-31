@@ -1,5 +1,5 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { bold, code, quote } from "@/utils";
+import { bold, code, quote, textEmbedOf } from "@/utils";
 import { issueToEmbed } from "@/utils/linear";
 import { Permission } from "@/handlers/permission-handler";
 import { PaginationOrderBy } from "@linear/sdk";
@@ -220,7 +220,7 @@ export const issues = {
         });
 
     if (!searchResults.nodes.length) {
-      await msg.reply("No issues found.");
+      await msg.reply(textEmbedOf("No issues found."));
       return;
     }
 
