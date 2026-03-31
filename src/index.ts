@@ -9,14 +9,23 @@ import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
 import logger from "./lib/logger";
+import { PermissionHandler } from "./handlers/permission-handler";
 
 const client = new Client({
   intents: 0,
 });
+
 const cmdHandler = new CommandHandler("l!", client);
 const evHandler = new EventHandler(client);
 const reactHandler = new ReactionHandler(client);
-client.handlers = { command: cmdHandler, event: evHandler, reaction: reactHandler };
+const permsHandler = new PermissionHandler();
+
+client.handlers = {
+  command: cmdHandler,
+  event: evHandler,
+  reaction: reactHandler,
+  perms: permsHandler,
+};
 
 cmdHandler.register(setup);
 cmdHandler.register(reset);
@@ -39,6 +48,7 @@ declare module "@fluxerjs/core" {
       command: CommandHandler;
       event: EventHandler;
       reaction: ReactionHandler;
+      perms: PermissionHandler;
     };
   }
 }
