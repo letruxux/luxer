@@ -50,8 +50,10 @@ export const login = {
       ),
     );
 
-    await msg.reply(
-      embedOf(new EmbedBuilder().setDescription("Check your DMs!").setColor(0x00ff00)),
-    );
+    if (msg.guild) {
+      await msg.reply(
+        embedOf(new EmbedBuilder().setDescription("Check your DMs!").setColor(0x00ff00)),
+      );
+    }
   },
 } satisfies Command;

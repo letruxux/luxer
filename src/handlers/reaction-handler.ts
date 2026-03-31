@@ -5,6 +5,10 @@ import {
   type MessageReaction,
 } from "@fluxerjs/core";
 
+export const YES_EMOJI = "✅";
+export const NO_EMOJI = "❌";
+export const YES_NO_EMOJIS = [YES_EMOJI, NO_EMOJI];
+
 export interface MessageWaitingForReaction {
   allowedUserIds: string[];
   allowedEmojis: string[];

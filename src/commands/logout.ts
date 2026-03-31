@@ -4,6 +4,7 @@ import { db } from "../db";
 import { EmbedBuilder } from "../utils/embed-builder";
 import { userTokens } from "../db/schema";
 import { eq } from "drizzle-orm";
+import { YES_EMOJI, YES_NO_EMOJIS } from "../handlers/reaction-handler";
 
 export const logout = {
   name: "logout",
@@ -19,11 +20,11 @@ export const logout = {
     });
     const resp = await msg.client.handlers.reaction.wait(respMsg, {
       allowedUserIds: [msg.author.id],
-      allowedEmojis: ["👍", "👎"],
+      allowedEmojis: YES_NO_EMOJIS,
       timeout: 120_000,
     });
 
-    if (!resp || resp.emoji.name !== "👍") {
+    if (!resp || resp.emoji.name !== YES_EMOJI) {
       await respMsg.edit({ content: "❌ Canceled", embeds: [] });
       await respMsg.removeAllReactions();
       return;

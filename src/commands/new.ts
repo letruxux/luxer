@@ -5,6 +5,7 @@ import z from "zod";
 import { issueToEmbed } from "../utils/linear";
 import { Permission } from "../handlers/permission-handler";
 import { EmbedBuilder } from "../utils/embed-builder";
+import { YES_EMOJI, YES_NO_EMOJIS } from "../handlers/reaction-handler";
 
 function parseArgs(rawArgs: string[]) {
   const argsOpt: Options = {
@@ -136,11 +137,11 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
 
     const resp = await msg.client.handlers.reaction.wait(respMsg, {
       allowedUserIds: [msg.author.id],
-      allowedEmojis: ["👍", "👎"],
+      allowedEmojis: YES_NO_EMOJIS,
       timeout: 120_000,
     });
 
-    if (!resp || resp.emoji.name !== "👍") {
+    if (!resp || resp.emoji.name !== YES_EMOJI) {
       await respMsg.edit({ content: "❌ Canceled", embeds: [] });
       await respMsg.removeAllReactions();
       return;
