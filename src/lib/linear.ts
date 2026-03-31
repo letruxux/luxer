@@ -1,4 +1,4 @@
-import { LinearClient, Team } from "@linear/sdk";
+import { LinearClient } from "@linear/sdk";
 
 export interface LinearIssue {
   id: string;

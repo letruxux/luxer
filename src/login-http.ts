@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import { db } from "./db";
 import { userTokens } from "./db/schema";
 import { env } from "./env";
-import { REST } from "@fluxerjs/rest";
+import { REST, Routes } from "@fluxerjs/rest";
+import logger from "./lib/logger";
+import { EmbedBuilder } from "./utils/embed-builder";
+import { bold } from "./utils";
 
 export const authApp = new Hono();
 const fluxerRest = new REST();
@@ -110,6 +113,26 @@ authApp.get("/callback", async (c) => {
           : null,
       },
     });
+
+  try {
+    const dmResponse = (await fluxerRest.post(Routes.userMeChannels(), {
+      body: { recipient_id: oauthData.userId },
+    })) as any;
+
+    const dmChannelId = dmResponse.id;
+
+    await fluxerRest.post(Routes.channelMessages(dmChannelId), {
+      body: {
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0x00ff00)
+            .setDescription(bold("Successfully linked your Linear account!")),
+        ],
+      },
+    });
+  } catch (error) {
+    logger.error("DM send failed:", error);
+  }
 
   return c.text("success! go back to fluxer");
 });

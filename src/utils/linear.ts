@@ -1,5 +1,5 @@
 import type { Comment } from "@linear/sdk";
-import { bold, code } from ".";
+import { bold } from ".";
 import { EmbedBuilder } from "./embed-builder";
 
 export async function issueToEmbed(issue: {

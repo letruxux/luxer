@@ -4,12 +4,7 @@ import { issueToEmbed } from "../utils/linear";
 import { Permission } from "../handlers/permission-handler";
 import type { Message } from "@fluxerjs/core";
 import type { Linear } from "../lib/linear";
-import {
-  PaginationOrderBy,
-  type Issue,
-  type IssueSearchPayload,
-  type IssueSearchResult,
-} from "@linear/sdk";
+import { PaginationOrderBy, type Issue, type IssueSearchResult } from "@linear/sdk";
 import type { EmbedBuilder } from "../utils/embed-builder";
 import { db } from "../db";
 import { issueIdsMessages } from "../db/schema";

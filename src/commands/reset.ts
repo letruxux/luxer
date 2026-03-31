@@ -1,4 +1,3 @@
-import { Message } from "@fluxerjs/core";
 import { db } from "../db";
 import { guildConfigs } from "../db/schema";
 import { type Command } from "../handlers/command-handler";

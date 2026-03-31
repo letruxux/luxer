@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { rolePermissions } from "../db/schema";
-import type { Guild, User } from "@fluxerjs/core";
 
 export enum Permission {
   READ_ISSUE = "read_issue",
