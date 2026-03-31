@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
 
 export const guildConfigs = sqliteTable("guild_configs", {
   guildId: text("guild_id").primaryKey(),
@@ -15,6 +15,18 @@ export const userTokens = sqliteTable("user_tokens", {
   createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
 });
+
+export const userPermissions = sqliteTable(
+  "user_permissions",
+  {
+    userId: text("user_id"),
+    guildId: text("guild_id"),
+    permissions: text("permissions").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).default(new Date()),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.guildId] })],
+);
 
 export type GuildConfig = typeof guildConfigs.$inferSelect;
 export type UserToken = typeof userTokens.$inferSelect;
