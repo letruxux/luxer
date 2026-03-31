@@ -1,4 +1,4 @@
-# leen (codename for now lol)
+# Lean 🍇
 
 Linear for Fluxer
 

@@ -1,5 +1,5 @@
 {
-  "name": "leen",
+  "name": "lean",
   "module": "src/index.ts",
   "type": "module",
   "private": true,
