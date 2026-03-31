@@ -4,7 +4,6 @@ import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 import { code } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
-import { Permission } from "../handlers/permission-handler";
 
 export const user = {
   name: "user",

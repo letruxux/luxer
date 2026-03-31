@@ -3,17 +3,10 @@ import { db } from "../db";
 import { guildConfigs } from "../db/schema";
 import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code, embedOf } from "../utils";
-import yargsParser from "yargs-parser";
+import { code, embedOf, yargs } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
 
 const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
-
-function parseArgs(args: string[]): Map<string, string> {
-  const a = yargsParser(args, { alias: { key: "k" } });
-
-  return new Map(Object.entries(a));
-}
 
 export const setup = {
   name: "setup",
@@ -23,7 +16,7 @@ export const setup = {
   async execute(msg, args) {
     const guildId = msg.guild!.id;
     const channel = msg.channel as TextChannel;
-    const key = parseArgs(args).get("key");
+    const key = yargs(args, { alias: { k: "key" } }).get("key");
 
     const existing = await db.query.guildConfigs.findFirst({
       where: (tbl, { eq }) => eq(tbl.guildId, guildId),

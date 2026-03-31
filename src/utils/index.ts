@@ -1,4 +1,6 @@
 import type { EmbedBuilder } from "@fluxerjs/core";
+import type { Options } from "yargs-parser";
+import yargsParser from "yargs-parser";
 
 export function code(str: string) {
   return `\`${str}\``;
@@ -16,4 +18,8 @@ export function fixCasing(str: string) {
 
 export function embedOf(embed: EmbedBuilder) {
   return { embeds: [embed] };
+}
+
+export function yargs(args: string[], config: Options) {
+  return new Map(Object.entries(yargsParser(args, config)));
 }
