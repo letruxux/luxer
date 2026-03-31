@@ -4,7 +4,6 @@ import { type Command } from "../handlers/command-handler";
 import { eq } from "drizzle-orm";
 import { countOccurrences, embedOf, isAll, textEmbedOf } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
-import type { Role } from "@fluxerjs/core";
 import { Permission, permissionSetToString } from "../handlers/permission-handler";
 import { NUMBER_EMOJIS } from "../handlers/reaction-handler";
 
@@ -26,22 +25,9 @@ export const role = {
         .where(eq(rolePermissions.guildId, guild.id))
         .execute();
 
-      if (currentSetups.length === 0) {
-        const prefix = await msg.client.handlers.command.getPrefix(msg);
-        await msg.reply(
-          textEmbedOf(
-            `Use \`${prefix}role <role mention>\` to set up a role's permissions.`,
-            {
-              title: "No configured roles found",
-            },
-          ),
-        );
-        return;
-      }
-
       const allRoles = Array.from(guild.roles.values())
+        .sort((a, b) => a.position - b.position)
         .reverse()
-        .sort((a, b) => b.position - a.position)
         .slice(0, guild.roles.size - 1);
 
       const desc = allRoles
@@ -64,9 +50,15 @@ export const role = {
         })
         .join("\n");
 
-      await msg.reply(
-        embedOf(new EmbedBuilder().setDescription(desc).setTitle("Configured roles")),
-      );
+      const prefix = await msg.client.handlers.command.getPrefix(msg);
+      const embed = new EmbedBuilder()
+        .setDescription(desc)
+        .setTitle("Configured roles")
+        .setFooter({
+          text: `Use "${prefix}role <role mention>" to set up a role's permissions.`,
+        });
+
+      await msg.reply(embedOf(embed));
     } else {
       const firstRoleId = roleIds[0]!;
       const firstRole = guild.roles.get(firstRoleId)!;
