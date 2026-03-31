@@ -9,7 +9,7 @@ const DEFAULT_FOOTER = {
 export class EmbedBuilder extends OldEmbedBuilder {
   constructor() {
     super();
-    this.setColor(0x000000);
+    this.setColor(0x000001);
     this.setFooter(DEFAULT_FOOTER);
   }
 

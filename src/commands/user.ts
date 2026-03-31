@@ -20,7 +20,6 @@ export const user = {
     const user = await new Linear(tokenRecord.linearToken).getViewer();
 
     const embed = new EmbedBuilder()
-      .setColor(0xff0000)
       .setDescription(code(user.email))
       .setThumbnail(user.avatarUrl ?? "")
       .setTimestamp()
