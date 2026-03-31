@@ -1,8 +1,11 @@
 import { Client } from "@fluxerjs/core";
+import { serve } from "bun";
 import { env } from "./env";
 import { CommandHandler } from "./handlers/command-handler";
 import { setup } from "./commands/setup";
-import { unconfig } from "./commands/unconfig";
+import { reset } from "./commands/reset";
+import { login, authApp } from "./commands/login";
+import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
 import logger from "./logger";
@@ -16,7 +19,9 @@ const reactHandler = new ReactionHandler(client);
 client.handlers = { command: cmdHandler, event: evHandler, reaction: reactHandler };
 
 cmdHandler.register(setup);
-cmdHandler.register(unconfig);
+cmdHandler.register(reset);
+cmdHandler.register(login);
+cmdHandler.register(user);
 
 client.once("ready", async () => {
   logger.info(`${client.user?.username} ready!`);
@@ -37,3 +42,8 @@ declare module "@fluxerjs/core" {
     };
   }
 }
+
+serve({
+  fetch: authApp.fetch,
+  port: env.PORT,
+});

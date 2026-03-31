@@ -21,6 +21,13 @@ export interface LinearComment {
   url: string;
 }
 
+export interface LinearUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 class LinearHelpers {
   static getDayAgo = () => {
     const now = new Date();
@@ -213,6 +220,16 @@ export class Linear {
       id: comment.id,
       body: comment.body ?? "",
       url: comment.url ?? "",
+    };
+  }
+
+  async getViewer(): Promise<LinearUser> {
+    const viewer = await this.client.viewer;
+    return {
+      id: viewer.id,
+      name: viewer.name ?? "",
+      email: viewer.email ?? "",
+      avatarUrl: viewer.avatarUrl ?? undefined,
     };
   }
 }

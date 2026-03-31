@@ -3,6 +3,7 @@ import { db } from "../db";
 import { guildConfigs } from "../db/schema";
 import { Linear } from "../linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
+import { code } from "../utils";
 
 const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
 
@@ -25,7 +26,7 @@ export const setup = {
     }
 
     if (!key) {
-      await msg.reply(`\`l!setup --key <KEY>`);
+      await msg.reply(code("l!setup --key <KEY>"));
       return;
     }
 
@@ -76,10 +77,10 @@ export const setup = {
 
     await db
       .insert(guildConfigs)
-      .values({ guildId, linearToken: key, teamId: selectedTeam.id })
+      .values({ guildId, teamId: selectedTeam.id })
       .onConflictDoUpdate({
         target: guildConfigs.guildId,
-        set: { linearToken: key, teamId: selectedTeam.id },
+        set: { teamId: selectedTeam.id },
       });
 
     await message.edit({

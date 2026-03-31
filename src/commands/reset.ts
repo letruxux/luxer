@@ -4,9 +4,9 @@ import { guildConfigs } from "../db/schema";
 import { type Command } from "../handlers/command-handler";
 import { eq } from "drizzle-orm";
 
-export const unconfig = {
-  name: "unconfig",
-  description: "Remove this community",
+export const reset = {
+  name: "reset",
+  description: "Reset this community",
   guildOnly: true,
   requireConfig: true,
   adminOnly: true,

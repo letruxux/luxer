@@ -1,18 +1,13 @@
 /* modified, grabbed from flux.fm */
 
-import {
-  EmbedBuilder,
-  PermissionFlags,
-  type Client,
-  type Message,
-  type User,
-} from "@fluxerjs/core";
+import { PermissionFlags, type Client, type Message, type User } from "@fluxerjs/core";
 import { FluxerAPIError, HTTPError } from "@fluxerjs/rest";
 import { parseArgs } from "string-args-parser";
 import { ZodError } from "zod";
 import { db } from "../db";
-import { guildConfigs } from "../db/schema";
+import { guildConfigs, userTokens } from "../db/schema";
 import logger from "../logger";
+import { EmbedBuilder } from "../embed-builder";
 
 export interface Command {
   aliases?: string[];
@@ -201,8 +196,19 @@ export class CommandHandler {
         const config = await db.query.guildConfigs.findFirst({
           where: (tbl, { eq }) => eq(tbl.guildId, msg.guild!.id),
         });
-        if (!config?.linearToken) {
-          await msg.reply(this.buildErrorPayload("Linear isn't configured yet."));
+        if (!config?.teamId) {
+          await msg.reply(
+            this.buildErrorPayload("Linear isn't configured yet. Use `l!setup` first."),
+          );
+          return true;
+        }
+        const userToken = await db.query.userTokens.findFirst({
+          where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
+        });
+        if (!userToken) {
+          await msg.reply(
+            this.buildErrorPayload("You haven't logged in yet. Use `l!login` first."),
+          );
           return true;
         }
         const flags = this.parseArgsToFlags(rawArgs);
