@@ -11,7 +11,7 @@ export const user = {
   description: "Get user",
   requireAccountLinked: true,
   requirePerms: [Permission.READ_ISSUE],
-  async execute(msg: Message, args: Map<string, string>) {
+  async execute(msg) {
     const tokenRecord = await db.query.userTokens.findFirst({
       where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
     });

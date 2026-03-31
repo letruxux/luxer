@@ -8,7 +8,7 @@ export const settings = {
   guildOnly: true,
   adminOnly: true,
   requireConfig: true,
-  async execute(msg: Message, args: Map<string, string>) {
+  async execute(msg) {
     const guildId = msg.guild!.id;
 
     const config = await db.query.guildConfigs.findFirst({

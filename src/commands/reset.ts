@@ -10,7 +10,7 @@ export const reset = {
   guildOnly: true,
   requireConfig: true,
   adminOnly: true,
-  async execute(msg: Message) {
+  async execute(msg) {
     const guildId = msg.guild!.id;
 
     await db.delete(guildConfigs).where(eq(guildConfigs.guildId, guildId));

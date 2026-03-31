@@ -13,7 +13,7 @@ export const login = {
   description: "Login to Linear",
   guildOnly: true,
   requireConfig: true,
-  async execute(msg: Message, args: Map<string, string>) {
+  async execute(msg) {
     const user = msg.author;
 
     const codeVerifier = await generateCodeVerifier();

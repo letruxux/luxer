@@ -4,18 +4,25 @@ import { guildConfigs } from "../db/schema";
 import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 import { code } from "../utils";
+import yargsParser from "yargs-parser";
 
 const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+
+function parseArgs(args: string[]): Map<string, string> {
+  const a = yargsParser(args, { alias: { key: "k" } });
+
+  return new Map(Object.entries(a));
+}
 
 export const setup = {
   name: "setup",
   description: "Setup Linear!",
   guildOnly: true,
   adminOnly: true,
-  async execute(msg: Message, args: Map<string, string>) {
+  async execute(msg, args) {
     const guildId = msg.guild!.id;
     const channel = msg.channel as TextChannel;
-    const key = args.get("key");
+    const key = parseArgs(args).get("key");
 
     const existing = await db.query.guildConfigs.findFirst({
       where: (tbl, { eq }) => eq(tbl.guildId, guildId),

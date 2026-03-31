@@ -29,6 +29,8 @@ export default class ReactionHandler {
   }
 
   private handleReaction(reaction: MessageReaction) {
+    if (reaction._data.user_id === this.client.user?.id) return;
+
     const list = this.waitingForReactions.get(reaction.messageId);
     if (!list || list.length === 0) return;
 

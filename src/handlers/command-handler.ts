@@ -14,12 +14,7 @@ import { code, fixCasing } from "../utils";
 export interface Command {
   aliases?: string[];
   description?: string;
-  execute: (
-    msg: Message,
-    args: Map<string, string>,
-    positional: string[],
-    config?: GuildConfig,
-  ) => Promise<void>;
+  execute: (msg: Message, args: string[], config?: GuildConfig) => Promise<void>;
   guildOnly?: boolean;
   hidden?: boolean;
   isAlias?: boolean;
@@ -130,23 +125,6 @@ export class CommandHandler {
     }
   }
 
-  private parseArgsToFlags(args: string[]): Map<string, string> {
-    const flags = new Map<string, string>();
-    let currentKey: string | null = null;
-
-    for (const arg of args) {
-      if (arg.startsWith("--")) {
-        currentKey = arg.slice(2);
-        flags.set(currentKey, "");
-      } else if (currentKey) {
-        flags.set(currentKey, arg);
-        currentKey = null;
-      }
-    }
-
-    return flags;
-  }
-
   async handleMessage(msg: Message): Promise<boolean> {
     if (!this.acceptMessage(msg.author)) {
       return false;
@@ -157,7 +135,7 @@ export class CommandHandler {
     try {
       const content = msg.content;
       if (content === this.client.user?.toString()) {
-        await this.commands.get("help")?.execute(msg, new Map(), [], undefined);
+        await this.commands.get("help")?.execute(msg, [], undefined);
         return true;
       }
 
@@ -222,9 +200,8 @@ export class CommandHandler {
           );
           return true;
         }
-        const flags = this.parseArgsToFlags(rawArgs);
         await command
-          .execute(msg, flags, rawArgs, config)
+          .execute(msg, rawArgs, config)
           .catch((err) => this.handleError(msg, err));
         return true;
       }
@@ -245,10 +222,7 @@ export class CommandHandler {
         `${msg.author.username} ran ${prefix}${name} in ${msg.guild?.name ?? "DMs"}`,
       );
 
-      const flags = this.parseArgsToFlags(rawArgs);
-      await command
-        .execute(msg, flags, rawArgs)
-        .catch((err) => this.handleError(msg, err));
+      await command.execute(msg, rawArgs).catch((err) => this.handleError(msg, err));
 
       return true;
     } catch (err) {
