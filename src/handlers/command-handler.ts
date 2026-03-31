@@ -183,7 +183,12 @@ export class CommandHandler {
       if (command.requirePerms) {
         const perms = await this.client.handlers.perms.get(msg.author.id, msg.guild!.id);
         const missingPerms = command.requirePerms.filter((p) => !perms[p]);
-        if (missingPerms.length > 0) {
+
+        const member = msg.guild?.members.get(msg.author.id);
+        if (
+          missingPerms.length > 0 &&
+          !member?.permissions.has(PermissionFlags.Administrator)
+        ) {
           await msg.reply(
             this.buildErrorPayload(
               `You need the following permissions to use this command: ${missingPerms
