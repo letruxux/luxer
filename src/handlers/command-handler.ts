@@ -20,7 +20,7 @@ export interface CommandExtra {
 export interface Command {
   aliases?: string[];
   description?: string;
-  execute: (msg: Message, args: string[], extra?: CommandExtra) => Promise<void>;
+  execute: (msg: Message, args: string[], extra: CommandExtra) => Promise<void>;
   guildOnly?: boolean;
   hidden?: boolean;
   isAlias?: boolean;
@@ -139,7 +139,7 @@ export class CommandHandler {
     try {
       const content = msg.content;
       if (content === this.client.user?.toString()) {
-        await this.commands.get("help")?.execute(msg, [], undefined);
+        await this.commands.get("help")?.execute(msg, [], {});
         return true;
       }
 

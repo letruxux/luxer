@@ -13,6 +13,7 @@ import { PermissionHandler } from "./handlers/permission-handler";
 import { authApp } from "./login-http";
 import { newIssue } from "./commands/new";
 import { issue } from "./commands/issue";
+import { label } from "./commands/label";
 
 const client = new Client({
   intents: 0,
@@ -36,6 +37,7 @@ cmdHandler.register(login);
 cmdHandler.register(user);
 cmdHandler.register(newIssue);
 cmdHandler.register(issue);
+cmdHandler.register(label);
 
 client.once("ready", async () => {
   logger.info(`${client.user?.username} ready!`);

@@ -84,7 +84,7 @@ async function sendExistingIssue(
       identifier: issue.identifier,
       labels: Object.hasOwn(issue, "labels")
         ? (await (issue as Issue).labels()).nodes.map((l) => l.name)
-        : [],
+        : (await (await linear.client.issue(issue.id)).labels()).nodes.map((l) => l.name),
       state: issue.state ? (await issue.state)?.name : "(no state)",
       title: issue.title,
       url: issue.url,
