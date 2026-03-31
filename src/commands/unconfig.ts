@@ -1,7 +1,7 @@
 import { Message } from "@fluxerjs/core";
 import { db } from "../db";
-import { guildConfigs } from "../schema";
-import { CommandUserError, type Command } from "../handlers/command-handler";
+import { guildConfigs } from "../db/schema";
+import { type Command } from "../handlers/command-handler";
 import { eq } from "drizzle-orm";
 
 export const unconfig = {

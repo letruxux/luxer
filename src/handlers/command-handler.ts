@@ -11,7 +11,7 @@ import { FluxerAPIError, HTTPError } from "@fluxerjs/rest";
 import { parseArgs } from "string-args-parser";
 import { ZodError } from "zod";
 import { db } from "../db";
-import { guildConfigs } from "../schema";
+import { guildConfigs } from "../db/schema";
 import logger from "../logger";
 
 export interface Command {

@@ -1,6 +1,6 @@
 import { Message, TextChannel } from "@fluxerjs/core";
 import { db } from "../db";
-import { guildConfigs } from "../schema";
+import { guildConfigs } from "../db/schema";
 import { Linear } from "../linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 
