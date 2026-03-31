@@ -6,8 +6,8 @@ import { parseArgs } from "string-args-parser";
 import { ZodError } from "zod";
 import { db } from "../db";
 import { guildConfigs, userTokens } from "../db/schema";
-import logger from "../logger";
-import { EmbedBuilder } from "../embed-builder";
+import logger from "../lib/logger";
+import { EmbedBuilder } from "../utils/embed-builder";
 
 export interface Command {
   aliases?: string[];

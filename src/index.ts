@@ -8,7 +8,7 @@ import { login, authApp } from "./commands/login";
 import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
-import logger from "./logger";
+import logger from "./lib/logger";
 
 const client = new Client({
   intents: 0,
