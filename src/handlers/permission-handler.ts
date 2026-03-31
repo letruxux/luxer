@@ -51,32 +51,7 @@ export class PermissionHandler {
     return this.parsePermissionRow(row?.permissions);
   }
 
-  async update(
-    user: User,
-    guild: Guild,
-    permissions: Partial<PermissionSet>,
-  ): Promise<void>;
-  async update(
-    userId: string,
-    guildId: string,
-    permissions: Partial<PermissionSet>,
-  ): Promise<void>;
-  async update(
-    userId: string | User,
-    guildId: string | Guild,
-    permissions: Partial<PermissionSet>,
-  ) {
-    if (typeof userId === "string" && typeof guildId === "string") {
-      userId = userId as string;
-      guildId = guildId as string;
-    } else {
-      userId = (userId as User).id;
-      guildId = (guildId as Guild).id;
-    }
-    if (!guildId || !userId) {
-      throw new Error("Invalid arguments");
-    }
-
+  async update(userId: string, guildId: string, permissions: Partial<PermissionSet>) {
     const row = await db
       .select()
       .from(rolePermissions)
