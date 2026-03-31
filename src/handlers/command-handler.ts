@@ -236,9 +236,7 @@ export class CommandHandler {
       );
 
       msg.channel?.sendTyping();
-      await command
-        .execute(msg, rawArgs, extra)
-        .catch((err) => this.handleError(msg, err));
+      command.execute(msg, rawArgs, extra).catch((err) => this.handleError(msg, err));
 
       return true;
     } catch (err) {
