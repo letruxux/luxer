@@ -26,13 +26,11 @@ async function sendExistingIssue(
   let searchResults: IssueSearchResult[] = [];
   let issue: Issue | undefined;
   if (isSearch) {
-    const d = await Promise.all(
-      await linear.client
-        .searchIssues(identifier, { teamId, orderBy: PaginationOrderBy.CreatedAt })
-        .then((e) => e.nodes.slice(0, 3)),
-    );
-    content = `Showing ${d.length} result${d.length === 1 ? "" : "s"} for ${bold(code(identifier))}`;
-    searchResults = d;
+    const issues = await linear.client
+      .searchIssues(identifier, { teamId, orderBy: PaginationOrderBy.CreatedAt })
+      .then((e) => e.nodes.slice(0, 3));
+    content = `Showing ${issues.length} result$issues.length === 1 ? "" : "s"} for ${bold(code(identifier))}`;
+    searchResults = issues;
   }
 
   if (searchResults.length === 0) {

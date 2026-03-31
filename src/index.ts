@@ -17,6 +17,7 @@ import { label } from "./commands/label";
 import { logout } from "./commands/logout";
 import { db } from "./db";
 import { role } from "./commands/role";
+import { issues } from "./commands/issues";
 
 const client = new Client({
   intents: 0,
@@ -42,6 +43,7 @@ cmdHandler.register(newIssue);
 cmdHandler.register(issue);
 cmdHandler.register(label);
 cmdHandler.register(logout);
+cmdHandler.register(issues);
 cmdHandler.register(role);
 
 client.once("ready", async () => {
