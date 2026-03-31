@@ -57,7 +57,7 @@ export const label = {
       );
     }
 
-    const { success } = await linear.client.updateIssue(issueId, {
+    const { success, issue } = await linear.client.updateIssue(issueId, {
       labelIds: labelIds.filter((l) => l !== undefined),
     });
     if (!success) throw new CommandUserError("Linear API error");
@@ -65,9 +65,11 @@ export const label = {
     const prefix = await msg.client.handlers.command.getPrefix(msg);
     await msg.reply(
       embedOf(
-        new EmbedBuilder().setDescription(
-          `Labels updated! Run \`${prefix}issue ${issueId}\` to view the updated issue`,
-        ),
+        new EmbedBuilder()
+          .setDescription(
+            `Labels updated! Run \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+          )
+          .setColor(0x00ff00),
       ),
     );
   },
