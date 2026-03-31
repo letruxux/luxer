@@ -15,6 +15,7 @@ import { newIssue } from "./commands/new";
 import { issue } from "./commands/issue";
 import { label } from "./commands/label";
 import { logout } from "./commands/logout";
+import { db } from "./db";
 
 const client = new Client({
   intents: 0,
@@ -62,7 +63,22 @@ declare module "@fluxerjs/core" {
   }
 }
 
-serve({
+const server = serve({
   fetch: authApp.fetch,
   port: env.PORT,
 });
+
+async function shutdown() {
+  logger.info("Shutting down...");
+  await server.stop();
+
+  db.$client.close();
+
+  await client.destroy();
+
+  logger.info("Bye!");
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown());
+process.on("SIGINT", () => shutdown());
