@@ -58,12 +58,18 @@ async function sendExistingIssue(
 
   const isOnlyOne = mixed.length === 1;
 
-  const comments = isOnlyOne
-    ? await linear.client
-        .comments({
-          filter: { issue: { id: { eq: mixed[0]!.id } } },
-        })
-        .then((e) => e.nodes.reverse())
+  const comments = (await msg.client.handlers.perms.can(
+    msg.author,
+    msg.guildId!,
+    Permission.READ_COMMENT,
+  ))
+    ? isOnlyOne
+      ? await linear.client
+          .comments({
+            filter: { issue: { id: { eq: mixed[0]!.id } } },
+          })
+          .then((e) => e.nodes.reverse())
+      : []
     : [];
 
   const embeds: EmbedBuilder[] = [];

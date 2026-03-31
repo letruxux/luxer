@@ -1,7 +1,7 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { rolePermissions } from "../db/schema";
-import type { User } from "@fluxerjs/core";
+import type { Role, User } from "@fluxerjs/core";
 
 export enum Permission {
   READ_ISSUE = "read_issue",
@@ -39,12 +39,12 @@ export class PermissionHandler {
     return acc;
   }
 
-  async get(user: User, guildId: string): Promise<PermissionSet> {
+  async getRole(roleId: string, guildId: string): Promise<PermissionSet> {
     const row = await db
       .select()
       .from(rolePermissions)
       .where(
-        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, roleId), eq(rolePermissions.guildId, guildId)),
       )
       .limit(1)
       .execute()
@@ -53,12 +53,42 @@ export class PermissionHandler {
     return this.parsePermissionRow(row?.permissions);
   }
 
-  async update(user: User, guildId: string, permissions: Partial<PermissionSet>) {
+  async get(user: User, guildId: string): Promise<PermissionSet> {
+    const guild =
+      user.client.guilds.get(guildId) ?? (await user.client.guilds.fetch(guildId));
+    if (!guild) return this.parsePermissionRow("");
+
+    const member = await guild.fetchMember(user.id);
+    const roles = member.roles.roleIds;
+
+    const rows = await db
+      .select()
+      .from(rolePermissions)
+      .where(
+        and(inArray(rolePermissions.roleId, roles), eq(rolePermissions.guildId, guildId)),
+      )
+      .execute();
+
+    const allPerms = rows.map((r) => this.parsePermissionRow(r.permissions));
+    const merged = allPerms.reduce((acc, perms) => {
+      for (const [perm, value] of Object.entries(perms) as [Permission, boolean][]) {
+        acc[perm] = acc[perm] || value;
+      }
+      return acc;
+    }, {} as PermissionSet);
+
+    return merged;
+  }
+
+  async update(role: Role, permissions: Partial<PermissionSet>) {
     const row = await db
       .select()
       .from(rolePermissions)
       .where(
-        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
+        and(
+          eq(rolePermissions.roleId, role.id),
+          eq(rolePermissions.guildId, role.guildId),
+        ),
       )
       .limit(1)
       .execute()
@@ -79,7 +109,10 @@ export class PermissionHandler {
           .join(","),
       })
       .where(
-        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
+        and(
+          eq(rolePermissions.roleId, role.id),
+          eq(rolePermissions.guildId, role.guildId),
+        ),
       )
       .execute();
   }
