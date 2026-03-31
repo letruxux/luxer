@@ -180,7 +180,7 @@ export class CommandHandler {
       }
 
       if (command.requirePerms) {
-        const perms = await this.client.handlers.perms.get(msg.author.id, msg.guild!.id);
+        const perms = await this.client.handlers.perms.get(msg.author, msg.guild!.id);
         const missingPerms = command.requirePerms.filter((p) => !perms[p]);
 
         const member = msg.guild?.members.get(msg.author.id);

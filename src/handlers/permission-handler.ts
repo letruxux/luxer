@@ -39,12 +39,12 @@ export class PermissionHandler {
     return acc;
   }
 
-  async get(userId: string, guildId: string): Promise<PermissionSet> {
+  async get(user: User, guildId: string): Promise<PermissionSet> {
     const row = await db
       .select()
       .from(rolePermissions)
       .where(
-        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
       )
       .limit(1)
       .execute()
@@ -53,12 +53,12 @@ export class PermissionHandler {
     return this.parsePermissionRow(row?.permissions);
   }
 
-  async update(userId: string, guildId: string, permissions: Partial<PermissionSet>) {
+  async update(user: User, guildId: string, permissions: Partial<PermissionSet>) {
     const row = await db
       .select()
       .from(rolePermissions)
       .where(
-        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
       )
       .limit(1)
       .execute()
@@ -79,12 +79,12 @@ export class PermissionHandler {
           .join(","),
       })
       .where(
-        and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
+        and(eq(rolePermissions.roleId, user.id), eq(rolePermissions.guildId, guildId)),
       )
       .execute();
   }
 
   async can(user: User, guildId: string, permission: Permission) {
-    return this.get(user.id, guildId).then((perms) => perms[permission]);
+    return this.get(user, guildId).then((perms) => perms[permission]);
   }
 }
