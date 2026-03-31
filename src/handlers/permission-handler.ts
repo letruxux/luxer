@@ -1,12 +1,15 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { rolePermissions } from "../db/schema";
+import type { User } from "@fluxerjs/core";
 
 export enum Permission {
   READ_ISSUE = "read_issue",
   CREATE_ISSUE = "create_issue",
   COMMENT_ISSUE = "comment_issue",
+  READ_COMMENT = "read_comment",
   DELETE_ISSUE = "delete_issue",
+  UPDATE_ISSUE = "update_issue",
 
   CREATE_LABEL = "create_label",
   DELETE_LABEL = "delete_label",
@@ -79,5 +82,9 @@ export class PermissionHandler {
         and(eq(rolePermissions.roleId, userId), eq(rolePermissions.guildId, guildId)),
       )
       .execute();
+  }
+
+  async can(user: User, guildId: string, permission: Permission) {
+    return this.get(user.id, guildId).then((perms) => perms[permission]);
   }
 }

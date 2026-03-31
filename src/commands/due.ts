@@ -6,9 +6,9 @@ import { eq } from "drizzle-orm";
 import { EmbedBuilder } from "../utils/embed-builder";
 import { Permission } from "../handlers/permission-handler";
 
-export const label = {
-  name: "label",
-  description: "Set labels (comma separated)",
+export const due = {
+  name: "due",
+  description: "Set due date",
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
