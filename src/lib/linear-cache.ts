@@ -1,4 +1,11 @@
-import type { Issue, IssueLabelConnection, User, WorkflowState } from "@linear/sdk";
+import type {
+  Issue,
+  IssueLabelConnection,
+  User,
+  WorkflowState,
+  IssueLabel,
+  WorkflowState as WorkflowStateType,
+} from "@linear/sdk";
 
 type CacheEntry<T> = {
   value: Promise<T>;
@@ -31,7 +38,6 @@ class TimedCache<T> {
   async getOrSet(id: string, promise: Promise<T>): Promise<T> {
     const existing = await this.get(id);
     if (existing) return existing;
-    console.log("get or set failed", id, this.name);
 
     this.set(id, promise);
     return promise;
@@ -43,6 +49,8 @@ class LinearCache {
   private issueCache = new TimedCache<Issue>(60_000, "issue");
   private issueLabelsCache = new TimedCache<IssueLabelConnection>(60_000, "issue labels");
   private issueStateCache = new TimedCache<WorkflowState>(60_000, "issue state");
+  private teamLabelsCache = new TimedCache<IssueLabel[]>(60_000, "team labels");
+  private teamStatesCache = new TimedCache<WorkflowStateType[]>(60_000, "team states");
 
   // user
   getUser = (id: string) => this.userCache.get(id);
@@ -69,6 +77,14 @@ class LinearCache {
     this.issueStateCache.set(id, promise);
   getOrSetState = (id: string, promise: Promise<WorkflowState>) =>
     this.issueStateCache.getOrSet(id, promise);
+
+  // team labels
+  getOrSetTeamLabels = (teamId: string, promise: Promise<IssueLabel[]>) =>
+    this.teamLabelsCache.getOrSet(teamId, promise);
+
+  // team states
+  getOrSetTeamStates = (teamId: string, promise: Promise<WorkflowStateType[]>) =>
+    this.teamStatesCache.getOrSet(teamId, promise);
 }
 
 export const linearCache = new LinearCache();

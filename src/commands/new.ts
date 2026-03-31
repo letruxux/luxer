@@ -6,6 +6,7 @@ import { issueToEmbed } from "@/utils/linear";
 import { Permission } from "@/handlers/permission-handler";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
+import { linearCache } from "@/lib/linear-cache";
 
 function parseArgs(rawArgs: string[]) {
   const argsOpt: Options = {
@@ -89,8 +90,8 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
     const { title, labels, state, description, due } = parseArgs(_rawArgs);
 
     const [validStates, validLabels] = await Promise.all([
-      linear.getStatesOfTeam(teamId),
-      linear.getLabelsOfTeam(teamId),
+      linearCache.getOrSetTeamStates(teamId, linear.getStatesOfTeam(teamId)),
+      linearCache.getOrSetTeamLabels(teamId, linear.getLabelsOfTeam(teamId)),
     ]);
 
     const stateObj = validStates.find(
@@ -159,7 +160,9 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
     if (!success) throw new CommandUserError("Linear API error");
 
     const finalIssue = await _issue!;
-    const viewer = await linear.getViewer();
+    const viewer = finalIssue.creatorId
+      ? await linearCache.getOrSetUser(finalIssue.creatorId, linear.client.viewer)
+      : undefined;
 
     await respMsg.edit({
       content: "✅ **Issue created!**",

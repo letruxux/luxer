@@ -5,6 +5,7 @@ import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
+import { linearCache } from "@/lib/linear-cache";
 
 export const label = {
   name: "label",
@@ -44,7 +45,10 @@ export const label = {
       throw new CommandUserError("No labels provided");
     }
 
-    const teamLabels = await linear.getLabelsOfTeam(teamId);
+    const teamLabels = await linearCache.getOrSetTeamLabels(
+      teamId,
+      linear.getLabelsOfTeam(teamId),
+    );
     const labelIds = labels.map(
       (l) => teamLabels.find((tl) => tl.name.toLowerCase() === l)?.id,
     );
