@@ -51,7 +51,7 @@ class LinearHelpers {
 }
 
 export class Linear {
-  private client: LinearClient;
+  public client: LinearClient;
   static helpers = LinearHelpers;
 
   constructor(token: string) {
@@ -91,29 +91,26 @@ export class Linear {
     }));
   }
 
-  async createIssue(
-    title: string,
-    description: string,
-    teamId: string,
-  ): Promise<LinearIssue> {
-    const result = await this.client.createIssue({
-      title,
-      description,
-      teamId,
-    });
+  async getStatesOfTeam(teamId: string) {
+    const result = await (await this.client.team(teamId)).states();
+    const nodes = result.nodes;
+    return nodes;
+  }
 
-    if (!result.success || !result.issue) {
-      throw new Error("Failed to create issue");
-    }
+  async getLabelsOfTeam(teamId: string) {
+    const result = await (await this.client.team(teamId)).labels();
+    const nodes = result.nodes;
+    return nodes;
+  }
 
-    await result.issue;
-    const issue = await result.issue;
-    return {
-      id: issue.id,
-      title: issue.title ?? "",
-      identifier: issue.identifier ?? "",
-      url: issue.url ?? "",
-    };
+  async getMemberById(teamId: string, userId: string) {
+    const result = await (
+      await this.client.team(teamId)
+    ).members({ filter: { id: { eq: userId } } });
+    const node = result.nodes[0];
+    if (!node) return null;
+
+    return node;
   }
 
   async searchIssues(query: string): Promise<LinearIssue[]> {
