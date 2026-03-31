@@ -1,22 +1,21 @@
-import { Message, TextChannel } from "@fluxerjs/core";
+import { TextChannel } from "@fluxerjs/core";
 import { db } from "../db";
 import { guildConfigs } from "../db/schema";
-import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
-import { code, embedOf, yargs } from "../utils";
+import { embedOf } from "../utils";
 import { EmbedBuilder } from "../utils/embed-builder";
 
-const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+const NUMEMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 
 export const setup = {
   name: "setup",
   description: "Setup Linear!",
   guildOnly: true,
   adminOnly: true,
-  async execute(msg, args) {
+  requireAccountLinked: true,
+  async execute(msg, _, { userLinear }) {
     const guildId = msg.guild!.id;
     const channel = msg.channel as TextChannel;
-    const key = yargs(args, { alias: { k: "key" } }).get("key");
 
     const existing = await db.query.guildConfigs.findFirst({
       where: (tbl, { eq }) => eq(tbl.guildId, guildId),
@@ -26,16 +25,11 @@ export const setup = {
       throw new CommandUserError("Already configured!");
     }
 
-    if (!key) {
-      throw new CommandUserError(code("l!setup --key <KEY>"));
-    }
-
-    const linearClient = new Linear(key);
     let teams: { id: string; name: string }[];
 
     try {
-      const rawTeams = await linearClient.getTeams();
-      teams = rawTeams.slice(0, 5).map((t) => ({ id: t.id, name: t.name }));
+      const rawTeams = await userLinear!.getTeams();
+      teams = rawTeams.slice(0, 10).map((t) => ({ id: t.id, name: t.name }));
     } catch {
       throw new CommandUserError("Invalid API key");
     }

@@ -1,11 +1,4 @@
-import { nanoid } from "nanoid";
-import { env } from "../env";
 import { CommandUserError, type Command } from "../handlers/command-handler";
-import {
-  generateCodeVerifier,
-  generateCodeChallenge,
-  addStateLogin,
-} from "../login-http";
 import { code, embedOf, yargs } from "../utils";
 import { db } from "../db";
 import { issueIdsMessages } from "../db/schema";

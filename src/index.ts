@@ -14,6 +14,7 @@ import { authApp } from "./login-http";
 import { newIssue } from "./commands/new";
 import { issue } from "./commands/issue";
 import { label } from "./commands/label";
+import { logout } from "./commands/logout";
 
 const client = new Client({
   intents: 0,
@@ -38,6 +39,7 @@ cmdHandler.register(user);
 cmdHandler.register(newIssue);
 cmdHandler.register(issue);
 cmdHandler.register(label);
+cmdHandler.register(logout);
 
 client.once("ready", async () => {
   logger.info(`${client.user?.username} ready!`);
