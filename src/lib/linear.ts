@@ -58,6 +58,12 @@ export class Linear {
     this.client = new LinearClient({ apiKey: token });
   }
 
+  async getUserTeamIds() {
+    const result = await this.client.teams();
+    const nodes = result.nodes.map((e) => e.id);
+    return nodes;
+  }
+
   async changeIssueState(issueId: string, state: string): Promise<LinearIssue> {
     const result = await this.client.updateIssue(issueId, {
       stateId: state,

@@ -51,40 +51,28 @@ class LinearCache {
   private issueStateCache = new TimedCache<WorkflowState>(60_000, "issue state");
   private teamLabelsCache = new TimedCache<IssueLabel[]>(60_000, "team labels");
   private teamStatesCache = new TimedCache<WorkflowStateType[]>(60_000, "team states");
+  private userTeamsCache = new TimedCache<string[]>(600_000, "user teams");
 
-  // user
-  getUser = (id: string) => this.userCache.get(id);
-  setUser = (id: string, promise: Promise<User>) => this.userCache.set(id, promise);
   getOrSetUser = (id: string, promise: Promise<User>) =>
     this.userCache.getOrSet(id, promise);
 
-  // issue
-  getIssue = (id: string) => this.issueCache.get(id);
-  setIssue = (id: string, promise: Promise<Issue>) => this.issueCache.set(id, promise);
   getOrSetIssue = (id: string, promise: Promise<Issue>) =>
     this.issueCache.getOrSet(id, promise);
 
-  // labels
-  getLabels = (id: string) => this.issueLabelsCache.get(id);
-  setLabels = (id: string, promise: Promise<IssueLabelConnection>) =>
-    this.issueLabelsCache.set(id, promise);
   getOrSetLabels = (id: string, promise: Promise<IssueLabelConnection>) =>
     this.issueLabelsCache.getOrSet(id, promise);
 
-  // state
-  getState = (id: string) => this.issueStateCache.get(id);
-  setState = (id: string, promise: Promise<WorkflowState>) =>
-    this.issueStateCache.set(id, promise);
   getOrSetState = (id: string, promise: Promise<WorkflowState>) =>
     this.issueStateCache.getOrSet(id, promise);
 
-  // team labels
   getOrSetTeamLabels = (teamId: string, promise: Promise<IssueLabel[]>) =>
     this.teamLabelsCache.getOrSet(teamId, promise);
 
-  // team states
   getOrSetTeamStates = (teamId: string, promise: Promise<WorkflowStateType[]>) =>
     this.teamStatesCache.getOrSet(teamId, promise);
+
+  getOrSetUserTeams = (userId: string, promise: Promise<string[]>) =>
+    this.userTeamsCache.getOrSet(userId, promise);
 }
 
 export const linearCache = new LinearCache();

@@ -10,6 +10,7 @@ import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "./permission-handler";
 import { code, embedOf, fixCasing } from "@/utils";
 import { Linear } from "@/lib/linear";
+import { linearCache } from "@/lib/linear-cache";
 
 export interface CommandExtra {
   config?: GuildConfig;
@@ -200,21 +201,6 @@ export class CommandHandler {
         }
       }
 
-      if (command.requireConfig && msg.guild) {
-        const config = await db.query.guildConfigs.findFirst({
-          where: (tbl, { eq }) => eq(tbl.guildId, msg.guild!.id),
-        });
-
-        if (!config?.teamId) {
-          await msg.reply(
-            this.buildErrorPayload("Linear isn't configured yet. Use `l!setup` first."),
-          );
-          return true;
-        }
-
-        extra.config = config;
-      }
-
       if (command.requireAccountLinked) {
         const userToken = await db.query.userTokens.findFirst({
           where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
@@ -229,6 +215,37 @@ export class CommandHandler {
 
         extra.userToken = userToken;
         extra.userLinear = new Linear(userToken.linearToken);
+      }
+
+      if (command.requireConfig && msg.guild) {
+        const config = await db.query.guildConfigs.findFirst({
+          where: (tbl, { eq }) => eq(tbl.guildId, msg.guild!.id),
+        });
+
+        if (!config?.teamId) {
+          await msg.reply(
+            this.buildErrorPayload("Linear isn't configured yet. Use `l!setup` first."),
+          );
+          return true;
+        }
+
+        extra.config = config;
+
+        if (command.requireAccountLinked) {
+          const userTeams = await linearCache.getOrSetUserTeams(
+            msg.author.id,
+            extra.userLinear!.getUserTeamIds(),
+          );
+
+          if (!userTeams.includes(config.teamId)) {
+            await msg.reply(
+              this.buildErrorPayload(
+                "You're not a member of this team. You can't interact.",
+              ),
+            );
+            return true;
+          }
+        }
       }
 
       logger.info(
