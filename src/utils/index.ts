@@ -6,6 +6,10 @@ export function code(str: string) {
   return `\`${str}\``;
 }
 
+export function bold(str: string) {
+  return `**${str}**`;
+}
+
 function capFirst(str: string): string {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);

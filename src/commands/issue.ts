@@ -1,32 +1,50 @@
-import { db } from "../db";
-import { Linear } from "../lib/linear";
 import { CommandUserError, type Command } from "../handlers/command-handler";
 import { code, dueToSeconds, embedOf, yargs } from "../utils";
-import { EmbedBuilder } from "../utils/embed-builder";
 import type { Options } from "yargs-parser";
 import z from "zod";
 import { issueToEmbed } from "../utils/linear";
 
-const argsOpt: Options = {
-  alias: {
-    t: "title",
-    l: "labels",
-    s: "state",
-    desc: "description",
-    d: "description",
-  },
-};
+function parseArgs(rawArgs: string[]) {
+  const argsOpt: Options = {
+    alias: {
+      t: "title",
+      l: "labels",
+      s: "state",
+      desc: "description",
+      d: "description",
+    },
+  };
 
-const argsSchema = z.object({
-  title: z.string().min(1),
-  labels: z
-    .string()
-    .optional()
-    .transform((v) => (v ?? "").split(",").filter((s) => s.length > 0)),
-  state: z.string().optional().default("Backlog"),
-  description: z.string().optional().default("(no description)"),
-  due: z.string().optional(),
-});
+  const argsSchema = z.object({
+    title: z.string().min(1),
+    labels: z
+      .string()
+      .optional()
+      .transform((v) => (v ?? "").split(",").filter((s) => s.length > 0)),
+    state: z.string().optional().default("Backlog"),
+    description: z.string().optional().default("(no description)"),
+    due: z.string().optional(),
+  });
+
+  const args = yargs(rawArgs, argsOpt);
+  const parsed = argsSchema.safeParse({
+    title: args.get("title"),
+    labels: args.get("labels"),
+    state: args.get("state"),
+    description: args.get("description"),
+  });
+
+  const parsedDue = args.get("due") ? dueToSeconds(args.get("due")) : undefined;
+
+  if (!parsed.success || parsedDue === null) {
+    const issues = parsed.error?.issues.map((i) => i.message).join("\n") ?? "";
+    throw new CommandUserError(
+      `Invalid args: ${parsedDue === null ? "Invalid due date" : ""}\n${issues}`,
+    );
+  }
+
+  return { ...parsed.data, due: parsedDue };
+}
 
 export const issue = {
   name: "issue",
@@ -34,61 +52,58 @@ export const issue = {
   requireAccountLinked: true,
   requireConfig: true,
   guildOnly: true,
-  async execute(msg, _rawArgs, config) {
-    const tokenRecord = await db.query.userTokens.findFirst({
-      where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
-    });
+  async execute(msg, _rawArgs, extra) {
+    const linear = extra?.userLinear;
+    const teamId = extra?.config?.teamId;
+    if (!linear || !teamId)
+      throw new CommandUserError("Not logged in or team not configured.");
 
-    if (!tokenRecord) {
-      throw new CommandUserError("Not logged in");
+    const { title, labels, state, description, due } = parseArgs(_rawArgs);
+
+    const [validStates, validLabels] = await Promise.all([
+      linear.getStatesOfTeam(teamId),
+      linear.getLabelsOfTeam(teamId),
+    ]);
+
+    const stateObj = validStates.find(
+      (s) => s.name.toLowerCase() === state.toLowerCase(),
+    );
+    if (!stateObj) {
+      throw new CommandUserError(
+        `State ${code(state)} not found.\nValid: ${validStates.map((s) => code(s.name)).join(", ")}`,
+      );
     }
 
-    const linear = new Linear(tokenRecord.linearToken);
+    const labelIds: string[] = [];
+    const fixedLabels: string[] = [];
 
-    const args = yargs(_rawArgs, argsOpt);
-    const {
-      success: parseSuccess,
-      data,
-      error,
-    } = argsSchema.safeParse({
-      title: args.get("title"),
-      labels: args.get("labels"),
-      state: args.get("state"),
-      description: args.get("description"),
-    });
+    for (const lName of labels) {
+      const match = validLabels.find((l) => l.name.toLowerCase() === lName.toLowerCase());
 
-    const parsedDue = args.get("due") ? dueToSeconds(args.get("due")) : undefined;
+      if (!match) {
+        const validList = validLabels.map((l) => code(l.name)).join(", ");
 
-    if (!parseSuccess || !data || parsedDue === null) {
-      let msg = "Invalid args";
-      if (parsedDue === null) {
-        msg += "\nInvalid due date";
+        throw new CommandUserError(
+          `Label ${code(lName)} not found.\nValid: ${validList}`,
+        );
       }
-      for (const err of error?.issues ?? []) {
-        msg += `\n${err.message}`;
-      }
-      throw new CommandUserError(msg);
-    }
 
-    const { title, labels, state, description } = data;
-
-    if (!title) {
-      throw new CommandUserError("Missing title");
+      labelIds.push(match.id);
+      fixedLabels.push(match.name);
     }
 
     const confirmationEmbed = issueToEmbed({
       title,
       description,
-      state,
-      labels,
+      state: stateObj.name,
+      labels: fixedLabels,
       url: "",
       createdAt: new Date(),
       creatorName: msg.author.username,
     });
 
     const respMsg = await msg.reply({
-      content:
-        "Are you sure? (2 minutes to decide or it will be automatically discarded)",
+      content: "**Are you sure?** (Expires in 2m)",
       embeds: [confirmationEmbed],
     });
 
@@ -98,81 +113,40 @@ export const issue = {
       timeout: 120_000,
     });
 
-    if (!resp) {
-      await respMsg.edit(msg.client.handlers.command.buildErrorPayload("Took too long!"));
+    if (!resp || resp.emoji.name !== "👍") {
+      await respMsg.edit({ content: "❌ Canceled", embeds: [] });
+      await respMsg.removeAllReactions();
       return;
-    }
-
-    if (resp.emoji.name !== "👍") {
-      await respMsg.edit(msg.client.handlers.command.buildErrorPayload("Cancelled"));
-      return;
-    }
-
-    const validStates = await linear.getStatesOfTeam(config!.teamId!);
-
-    const statesMap = new Map(validStates.map((s) => [s.name.toLowerCase(), s]));
-
-    const stateObj = statesMap.get(state.toLowerCase());
-
-    if (!stateObj) {
-      throw new CommandUserError(
-        `The state ${code(state)} doesn't exist!\nAvailable states: ${validStates
-          .map((l) => code(l.name))
-          .join(", ")}`,
-      );
-    }
-
-    const validLabels = await linear.getLabelsOfTeam(config!.teamId!);
-
-    const labelsMap = new Map(validLabels.map((l) => [l.name.toLowerCase(), l]));
-
-    const fixedLabels: string[] = [];
-    const labelIds: string[] = [];
-
-    for (const label of labels) {
-      const labelObj = labelsMap.get(label.toLowerCase());
-
-      if (!labelObj) {
-        throw new CommandUserError(
-          `The label ${code(label)} doesn't exist!\nAvailable labels: ${validLabels
-            .map((l) => code(l.name))
-            .join(", ")}`,
-        );
-      }
-
-      fixedLabels.push(labelObj.name);
-      labelIds.push(labelObj.id);
     }
 
     const { issue: _issue, success } = await linear.client.createIssue({
       title,
       description,
-      teamId: config!.teamId!,
+      teamId,
       stateId: stateObj.id,
       labelIds,
+      dueDate: due ? new Date(Date.now() + due * 1000) : undefined,
     });
 
-    if (!success) {
-      throw new CommandUserError("Failed to create issue...");
-    }
+    if (!success) throw new CommandUserError("Linear API error");
 
-    const issue = await _issue!;
-    const member = await linear.getViewer();
+    const finalIssue = await _issue!;
+    const viewer = await linear.getViewer();
 
     await respMsg.edit({
-      content: "Issue created!",
+      content: "✅ **Issue created!**",
       ...embedOf(
         issueToEmbed({
           title,
           description,
           state: stateObj.name,
           labels: fixedLabels,
-          url: issue.url,
-          createdAt: issue.createdAt,
-          creatorPicture: member?.avatarUrl || undefined,
-          creatorName: member ? member.name : msg.author.username,
-          identifier: issue.identifier,
-          updatedAt: issue.updatedAt,
+          url: finalIssue.url,
+          createdAt: finalIssue.createdAt,
+          creatorPicture: viewer?.avatarUrl || undefined,
+          creatorName: viewer?.name || msg.author.username,
+          identifier: finalIssue.identifier,
+          updatedAt: finalIssue.updatedAt,
         }),
       ),
     });

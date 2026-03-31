@@ -10,11 +10,17 @@ import logger from "../lib/logger";
 import { EmbedBuilder } from "../utils/embed-builder";
 import { Permission, type PermissionSet } from "./permission-handler";
 import { code, embedOf, fixCasing } from "../utils";
+import { Linear } from "../lib/linear";
 
+export interface CommandExtra {
+  config?: GuildConfig;
+  userToken?: typeof userTokens.$inferSelect;
+  userLinear?: Linear;
+}
 export interface Command {
   aliases?: string[];
   description?: string;
-  execute: (msg: Message, args: string[], config?: GuildConfig) => Promise<void>;
+  execute: (msg: Message, args: string[], extra?: CommandExtra) => Promise<void>;
   guildOnly?: boolean;
   hidden?: boolean;
   isAlias?: boolean;
@@ -155,6 +161,8 @@ export class CommandHandler {
         return false;
       }
 
+      const extra: CommandExtra = {};
+
       if (command.guildOnly && !msg.guild) {
         await msg.reply(
           this.buildErrorPayload(`This command only works in communities!`),
@@ -192,35 +200,40 @@ export class CommandHandler {
         const config = await db.query.guildConfigs.findFirst({
           where: (tbl, { eq }) => eq(tbl.guildId, msg.guild!.id),
         });
+
         if (!config?.teamId) {
           await msg.reply(
             this.buildErrorPayload("Linear isn't configured yet. Use `l!setup` first."),
           );
           return true;
         }
-        await command
-          .execute(msg, rawArgs, config)
-          .catch((err) => this.handleError(msg, err));
-        return true;
+
+        extra.config = config;
       }
 
       if (command.requireAccountLinked) {
         const userToken = await db.query.userTokens.findFirst({
           where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
         });
+
         if (!userToken) {
           await msg.reply(
             this.buildErrorPayload("You haven't logged in yet. Use `l!login` first."),
           );
           return true;
         }
+
+        extra.userToken = userToken;
+        extra.userLinear = new Linear(userToken.linearToken);
       }
 
       logger.info(
         `${msg.author.username} ran ${prefix}${name} in ${msg.guild?.name ?? "DMs"}`,
       );
 
-      await command.execute(msg, rawArgs).catch((err) => this.handleError(msg, err));
+      await command
+        .execute(msg, rawArgs, extra)
+        .catch((err) => this.handleError(msg, err));
 
       return true;
     } catch (err) {

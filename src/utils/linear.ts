@@ -1,4 +1,4 @@
-import { code } from ".";
+import { bold, code } from ".";
 import { EmbedBuilder } from "./embed-builder";
 
 export function issueToEmbed(issue: {
@@ -18,10 +18,10 @@ export function issueToEmbed(issue: {
     .setTitle(issue.identifier ? `[${issue.identifier}] ${issue.title}` : issue.title)
     .setDescription(
       `
-${code("State")}: ${issue.state}
-${code("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}
-${code("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt).getTime() / 1000)}:R>`}
-${code("Due date")}: ${issue.dueDate ? `<t:${Math.floor(issue.dueDate.getTime() / 1000)}:R>` : "(none)"}
+${bold("State")}: ${issue.state}
+${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}
+${bold("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt).getTime() / 1000)}:R>`}
+${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(issue.dueDate.getTime() / 1000)}:R>` : "(none)"}
 
 ${issue.description}
       `.trim(),
