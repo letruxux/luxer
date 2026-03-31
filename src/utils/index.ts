@@ -62,6 +62,11 @@ export function dueToSeconds(str: string): number | null {
     mo: 30 * 24 * 60 * 60,
     month: 30 * 24 * 60 * 60,
     months: 30 * 24 * 60 * 60,
+    y: 365 * 24 * 60 * 60,
+    year: 365 * 24 * 60 * 60,
+    years: 365 * 24 * 60 * 60,
+    yr: 365 * 24 * 60 * 60,
+    yrs: 365 * 24 * 60 * 60,
   };
 
   const match = str.match(/^(\d+)\s*(\w+)$/);

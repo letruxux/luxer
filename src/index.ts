@@ -12,12 +12,12 @@ import logger from "./lib/logger";
 import { PermissionHandler } from "./handlers/permission-handler";
 import { authApp } from "./login-http";
 import { newIssue } from "./commands/new";
-import { issue } from "./commands/issue";
 import { label } from "./commands/label";
 import { logout } from "./commands/logout";
 import { db } from "./db";
 import { role } from "./commands/role";
 import { issues } from "./commands/issues";
+import { due } from "./commands/due";
 
 const client = new Client({
   intents: 0,
@@ -40,10 +40,10 @@ cmdHandler.register(reset);
 cmdHandler.register(login);
 cmdHandler.register(user);
 cmdHandler.register(newIssue);
-cmdHandler.register(issue);
 cmdHandler.register(label);
 cmdHandler.register(logout);
 cmdHandler.register(issues);
+cmdHandler.register(due);
 cmdHandler.register(role);
 
 client.once("ready", async () => {

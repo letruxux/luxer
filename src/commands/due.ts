@@ -1,5 +1,5 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, embedOf, yargs } from "@/utils";
+import { code, dueToSeconds, embedOf, yargs } from "@/utils";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -15,7 +15,6 @@ export const due = {
   requirePerms: [Permission.UPDATE_ISSUE],
   async execute(msg, args, { userLinear, config }) {
     const linear = userLinear!;
-    const teamId = config!.teamId!;
 
     const issueId = msg.referencedMessage
       ? await db
@@ -33,32 +32,20 @@ export const due = {
       );
     }
 
-    const labels = msg.content
-      .split(" ")
-      .slice(1)
-      .join(" ")
-      .split(",")
-      .map((e) => e.trim().toLowerCase());
+    const due = msg.content.split(" ").slice(1).join(" ").trim().toLowerCase();
 
-    if (labels.length === 0) {
-      throw new CommandUserError("No labels provided");
+    if (due.length === 0) {
+      throw new CommandUserError("No due date provided");
     }
 
-    const teamLabels = await linear.getLabelsOfTeam(teamId);
-    const labelIds = labels.map(
-      (l) => teamLabels.find((tl) => tl.name.toLowerCase() === l)?.id,
-    );
-    if (labelIds.some((l) => l === undefined)) {
-      const notFoundLabels = labels.filter(
-        (l) => !teamLabels.some((tl) => tl.name.toLowerCase() === l),
-      );
-      throw new CommandUserError(
-        `Labels ${notFoundLabels.map(code).join(", ")} not found.\nValid: ${teamLabels.map((l) => code(l.name)).join(", ")}`,
-      );
+    const parsed = dueToSeconds(due);
+
+    if (!parsed) {
+      throw new CommandUserError("Invalid due date");
     }
 
     const { success, issue } = await linear.client.updateIssue(issueId, {
-      labelIds: labelIds.filter((l) => l !== undefined),
+      dueDate: new Date(Date.now() + parsed * 1000).toISOString(),
     });
     if (!success) throw new CommandUserError("Linear API error");
 
@@ -67,7 +54,7 @@ export const due = {
       embedOf(
         new EmbedBuilder()
           .setDescription(
-            `Labels updated! Run \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+            `Due date updated to <t:${Math.floor(new Date((await issue)!.dueDate).getTime() / 1000)}:d>!\nRun \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

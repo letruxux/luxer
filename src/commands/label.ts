@@ -69,6 +69,9 @@ export const label = {
           .setDescription(
             `Labels updated! Run \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
           )
+          .setDescription(
+            `Labels updated to ${labels.map(code).join(", ")}!\nRun \`${prefix}issue ${issue ? (await issue).identifier : issueId}\` to view the updated issue`,
+          )
           .setColor(0x00ff00),
       ),
     );

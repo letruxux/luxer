@@ -48,9 +48,9 @@ ${(await Promise.all(slicedComments.map(formatComment))).join("\n")}
 ${bold("State")}: ${issue.state}
 ${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}
 ${bold("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt).getTime() / 1000)}:R>`}
-${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(issue.dueDate.getTime() / 1000)}:R>` : "(none)"}
+${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(new Date(issue.dueDate).getTime() / 1000)}:d> ${Date.now() > new Date(issue.dueDate).getTime() ? "(overdue)" : ""}` : "(none)"}
 
-${issue.description.slice(0, 2000)}${issue.description.length > 2000 ? `... [more ${issue.description.length - 2000} characters]` : ""}
+${issue.description.slice(0, 2000)}${issue.description.length > 2000 ? `... [more ${issue.description.length - 2000} characters]` : ""} 
 
 ${commentsString}
       `.trim(),
