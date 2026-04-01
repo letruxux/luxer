@@ -143,7 +143,10 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
     });
 
     if (!resp || resp.emoji.name !== YES_EMOJI) {
-      await respMsg.edit({ content: "❌ Canceled", embeds: [] });
+      await respMsg.edit({
+        content: "",
+        embeds: [msg.client.handlers.command.buildErrorEmbed("Cancelled")],
+      });
       await respMsg.removeAllReactions();
       return;
     }

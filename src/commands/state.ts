@@ -63,8 +63,9 @@ export const state = {
     await msg.reply(
       embedOf(
         new EmbedBuilder()
+          .setTitle(`State updated to ${code(stateObj.name)}!`)
           .setDescription(
-            `State updated to ${code(stateObj.name)}!\nRun \`${prefix}issue ${issue ? resultIssue.identifier : issueId}\` to view the updated issue`,
+            `Run \`${prefix}issue ${issue ? resultIssue.identifier : issueId}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

@@ -20,6 +20,8 @@ import { issues } from "./commands/issues";
 import { due } from "./commands/due";
 import { state } from "./commands/state";
 import { helpCommandExecute } from "./commands/help";
+import { team } from "./commands/team";
+import { comment } from "./commands/comment";
 
 const client = new Client({
   intents: 0,
@@ -37,7 +39,21 @@ client.handlers = {
   perms: permsHandler,
 };
 
-client.commands = [setup, reset, login, user, newIssue, label, logout, issues, due, state, role];
+client.commands = [
+  setup,
+  reset,
+  login,
+  user,
+  newIssue,
+  label,
+  logout,
+  issues,
+  due,
+  state,
+  role,
+  team,
+  comment,
+];
 
 for (const cmd of client.commands) {
   cmdHandler.register(cmd);
@@ -45,7 +61,7 @@ for (const cmd of client.commands) {
 cmdHandler.register({
   name: "help",
   aliases: ["h"],
-  description: "get help",
+  description: "Get help",
   execute: helpCommandExecute,
 });
 

@@ -1,6 +1,6 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { bold, code, quote, textEmbedOf } from "@/utils";
-import { issueToEmbed } from "@/utils/linear";
+import { isLinearIdentifier, issueToEmbed } from "@/utils/linear";
 import { Permission } from "@/handlers/permission-handler";
 import { PaginationOrderBy } from "@linear/sdk";
 import { linearCache } from "@/lib/linear-cache";
@@ -12,7 +12,7 @@ import { issueIdsMessages } from "@/db/schema";
 
 const MAX_SHOWN = 3;
 
-interface EnrichedIssue {
+interface IssueMeta {
   labels: string[];
   state: string;
   creatorName?: string;
@@ -23,7 +23,7 @@ async function getMoreIssueMetadata(
   issue: Issue | IssueSearchResult,
   linear: Linear,
   { isSearchResult = false } = {},
-): Promise<EnrichedIssue> {
+): Promise<IssueMeta> {
   const issueFull = isSearchResult
     ? await linearCache.getOrSetIssue(issue.id, linear.client.issue(issue.id))
     : await linear.client.issue(issue.id);
@@ -46,7 +46,7 @@ async function getMoreIssueMetadata(
   };
 }
 
-async function buildIssueEmbed(
+export async function buildIssueEmbed(
   issue: Issue,
   linear: Linear,
   comments: Comment[],
@@ -196,7 +196,7 @@ async function doThePages({
 }
 
 async function searchIssues(query: string, linear: Linear, teamId: string) {
-  const isSearch = !query.includes("-");
+  const isSearch = !isLinearIdentifier(query);
 
   if (isSearch) {
     const results = await linear.client
@@ -240,7 +240,7 @@ async function viewIssue(issue: Issue, linear: Linear, msg: Message) {
     page: 0,
   });
 
-  const content = bold(`${1} result found for ${code(issue.identifier)}`);
+  const content = bold(`1 result found for ${code(issue.identifier)}`);
 
   const sentMessage = await msg.reply({
     embeds,

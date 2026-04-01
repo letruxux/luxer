@@ -10,11 +10,15 @@ export const user = {
   description: "Get user",
   requireAccountLinked: true,
   async execute(msg) {
+    const idToCheck = msg.mentions[0]?.id ?? msg.author.id;
+
     const tokenRecord = await db.query.userTokens.findFirst({
-      where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
+      where: (tbl, { eq }) => eq(tbl.userId, idToCheck),
     });
 
-    if (!tokenRecord) {
+    if (!tokenRecord && msg.mentions[0]?.id) {
+      throw new CommandUserError("That user isn't linked to an account.");
+    } else if (!tokenRecord) {
       throw new CommandUserError("Not logged in");
     }
 
@@ -23,6 +27,7 @@ export const user = {
     const embed = new EmbedBuilder()
       .setDescription(code(user.email))
       .setThumbnail(user.avatarUrl ?? "")
+      .setURL(user.url)
       .setTimestamp()
       .setTitle(user.name);
 

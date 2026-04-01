@@ -25,7 +25,9 @@ export const logout = {
     });
 
     if (!resp || resp.emoji.name !== YES_EMOJI) {
-      await respMsg.edit({ content: "❌ Canceled", embeds: [] });
+      await respMsg.edit({
+        embeds: [msg.client.handlers.command.buildErrorEmbed("Cancelled")],
+      });
       await respMsg.removeAllReactions();
       return;
     }

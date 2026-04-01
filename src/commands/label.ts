@@ -69,11 +69,9 @@ export const label = {
     await msg.reply(
       embedOf(
         new EmbedBuilder()
+          .setTitle(`Labels updated to ${labels.map(code).join(", ")}!`)
           .setDescription(
-            `Labels updated! Run \`${prefix}issue ${issue ? issueResult.identifier : issueId}\` to view the updated issue`,
-          )
-          .setDescription(
-            `Labels updated to ${labels.map(code).join(", ")}!\nRun \`${prefix}issue ${issue ? issueResult.identifier : issueId}\` to view the updated issue`,
+            `Run \`${prefix}issue ${issue ? issueResult.identifier : issueId}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

@@ -1,0 +1,128 @@
+import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { code, embedOf, filterIdArg, hyperlink, textEmbedOf, yargs } from "@/utils";
+import { db } from "@/db";
+import { issueIdsMessages } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { EmbedBuilder } from "@/utils/embed-builder";
+import { Permission } from "@/handlers/permission-handler";
+import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
+import { linearCache } from "@/lib/linear-cache";
+import { buildIssueEmbed } from "./issues";
+import { buildCommentsPart } from "@/utils/linear";
+
+export const comment = {
+  name: "comment",
+  description: "Comment on an issue",
+  guildOnly: true,
+  requireAccountLinked: true,
+  requireConfig: true,
+  requirePerms: [Permission.UPDATE_ISSUE],
+  async execute(msg, args, { userLinear }) {
+    const linear = userLinear!;
+
+    const issueId = msg.referencedMessage
+      ? await db
+          .select()
+          .from(issueIdsMessages)
+          .where(eq(issueIdsMessages.messageId, msg.referencedMessage!.id))
+          .limit(1)
+          .execute()
+          .then((e) => e[0]?.issueId ?? undefined)
+      : (yargs(args, { alias: { i: "id" } }).get("id") as string | undefined);
+
+    if (!issueId) {
+      throw new CommandUserError(
+        "No issue provided, either reply to an issue or use the `--id <ABC-123>` flag",
+      );
+    }
+
+    const issue = await linearCache.getOrSetIssue(issueId, linear.client.issue(issueId));
+    const hasCommentPermission = await msg.client.handlers.perms.can(
+      msg.author,
+      msg.guildId!,
+      Permission.READ_COMMENT,
+    );
+
+    const comments = hasCommentPermission
+      ? await linear.client
+          .comments({
+            filter: { issue: { id: { eq: issue.id } } },
+          })
+          .then((e) => e.nodes.reverse())
+      : [];
+    if (!issue) {
+      throw new CommandUserError("Issue not found");
+    }
+
+    let body = filterIdArg(args).join(" ").trim();
+    let i = 1;
+    for (const attachment of msg.attachments.values()) {
+      if (attachment.url) {
+        body += `\n${attachment.content_type?.startsWith("image") ? "!" : ""}${hyperlink(`attachment ${i + 1}`, attachment.url)}`;
+        i++;
+      }
+    }
+
+    if (body.length === 0) {
+      throw new CommandUserError("No comment body provided");
+    }
+
+    const viewer = await linear.getViewer();
+
+    const confirmationEmbed = new EmbedBuilder()
+      .setTitle(`Re: [${issue.identifier}] ${issue.title}`)
+      .setDescription(body)
+      .setAuthor({
+        name: viewer.name,
+        iconURL: viewer.avatarUrl ?? undefined,
+        url: viewer.url,
+      })
+      .setColor(0x00ff00);
+
+    const respMsg = await msg.reply({
+      content: "**Are you sure?** (Expires in 2m)",
+      embeds: [confirmationEmbed],
+    });
+
+    const resp = await msg.client.handlers.reaction.wait(respMsg, {
+      allowedUserIds: [msg.author.id],
+      allowedEmojis: YES_NO_EMOJIS,
+      timeout: 120_000,
+    });
+
+    if (!resp || resp.emoji.name !== YES_EMOJI) {
+      await respMsg.edit({
+        content: "",
+        embeds: [msg.client.handlers.command.buildErrorEmbed("Cancelled")],
+      });
+      await respMsg.removeAllReactions();
+      return;
+    }
+
+    const result = await linear.client.createComment({
+      issueId,
+      body,
+    });
+    if (!result) throw new CommandUserError("Linear API error");
+
+    const prefix = await msg.client.handlers.command.getPrefix(msg);
+    if (!result.comment) throw new CommandUserError("Linear API error");
+
+    const resultComment = await result.comment;
+    const newComments = [...comments, resultComment].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+    const commentsString = await buildCommentsPart(newComments);
+    const finalEmbed = new EmbedBuilder()
+      .setDescription(
+        `${commentsString}\n\nRun \`${prefix}issue ${issue ? issue.identifier : issueId}\` to view the updated issue`,
+      )
+      .setTitle(`Comment added under ${code(issue.identifier)}!`)
+      .setColor(0x00ff00);
+
+    await respMsg.edit({
+      embeds: [finalEmbed],
+    });
+    await respMsg.removeAllReactions();
+  },
+} satisfies Command;

@@ -1,4 +1,5 @@
 import { LinearClient } from "@linear/sdk";
+import { linearCache } from "./linear-cache";
 
 export interface LinearIssue {
   id: string;
@@ -64,29 +65,6 @@ export class Linear {
     return nodes;
   }
 
-  async changeIssueState(issueId: string, state: string): Promise<LinearIssue> {
-    const result = await this.client.updateIssue(issueId, {
-      stateId: state,
-    });
-
-    if (!result.success) {
-      throw new Error("Failed to change issue state");
-    }
-
-    const issue = await result.issue;
-    if (!issue) {
-      throw new Error("Failed to change issue state");
-    }
-
-    return {
-      id: issue.id,
-      title: issue.title ?? "",
-      identifier: issue.identifier ?? "",
-      url: issue.url ?? "",
-      state: issue.state ? { name: (await issue.state).name ?? "" } : undefined,
-    };
-  }
-
   async getTeams(): Promise<LinearTeam[]> {
     const result = await this.client.teams();
     const nodes = result.nodes;
@@ -104,104 +82,27 @@ export class Linear {
   }
 
   async getLabelsOfTeam(teamId: string) {
-    const result = await (await this.client.team(teamId)).labels();
+    const result = await linearCache.getOrSetLabels(
+      teamId,
+      this.client.team(teamId).then((e) => e.labels()),
+    );
     const nodes = result.nodes;
     return nodes;
   }
 
   async getMemberById(teamId: string, userId: string) {
-    const result = await (
-      await this.client.team(teamId)
-    ).members({ filter: { id: { eq: userId } } });
-    const node = result.nodes[0];
-    if (!node) return null;
+    const result = await linearCache.getOrSetUser(
+      userId,
+      this.client
+        .team(teamId)
+        .then((a) =>
+          a.members({ filter: { id: { eq: userId } } }).then((a) => a.nodes[0]!),
+        ),
+    );
 
-    return node;
-  }
+    if (!result) return null;
 
-  async searchIssues(query: string): Promise<LinearIssue[]> {
-    const result = await this.client.issues({
-      filter: {
-        id: { eq: query },
-      },
-    });
-    const nodes = result.nodes;
-    const issues: LinearIssue[] = [];
-
-    for await (const issue of nodes) {
-      const state = await issue.state;
-      issues.push({
-        id: issue.id,
-        title: issue.title ?? "",
-        identifier: issue.identifier ?? "",
-        url: issue.url ?? "",
-        state: state ? { name: state.name ?? "" } : undefined,
-      });
-    }
-
-    return issues;
-  }
-
-  async getCompletedIssues(
-    teamId: string,
-    {
-      since,
-    }: {
-      since?: Date;
-    },
-  ): Promise<LinearIssue[]> {
-    const issuesResult = await this.client.issues({
-      filter: { updatedAt: { gte: since } },
-    });
-
-    const issues: LinearIssue[] = [];
-
-    for await (const issue of issuesResult.nodes) {
-      const team = await issue.team;
-      const state = await issue.state;
-
-      if (team?.id === teamId && state?.name === "Done") {
-        issues.push({
-          id: issue.id,
-          title: issue.title ?? "",
-          identifier: issue.identifier ?? "",
-          url: issue.url ?? "",
-        });
-      }
-    }
-
-    return issues;
-  }
-
-  async getAllIssues(
-    teamId: string,
-    {
-      since,
-    }: {
-      since?: Date;
-    },
-  ): Promise<LinearIssue[]> {
-    const issuesResult = await this.client.issues({
-      filter: {
-        team: { id: { eq: teamId } },
-        ...(since ? { createdAt: { gte: since } } : {}),
-      },
-    });
-
-    const issues: LinearIssue[] = [];
-
-    for await (const issue of issuesResult.nodes) {
-      const state = await issue.state;
-      issues.push({
-        id: issue.id,
-        title: issue.title ?? "",
-        identifier: issue.identifier ?? "",
-        url: issue.url ?? "",
-        state: state ? { name: state.name ?? "" } : undefined,
-      });
-    }
-
-    return issues;
+    return result;
   }
 
   async createComment(issueId: string, body: string): Promise<LinearComment> {
@@ -226,13 +127,8 @@ export class Linear {
     };
   }
 
-  async getViewer(): Promise<LinearUser> {
+  async getViewer() {
     const viewer = await this.client.viewer;
-    return {
-      id: viewer.id,
-      name: viewer.name ?? "",
-      email: viewer.email ?? "",
-      avatarUrl: viewer.avatarUrl ?? undefined,
-    };
+    return viewer;
   }
 }

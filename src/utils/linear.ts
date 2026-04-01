@@ -6,6 +6,14 @@ import { linearCache } from "@/lib/linear-cache";
 const MAX_DESCRIPTION_LENGTH = 1900;
 const MAX_COMMENTS = 3;
 
+export async function buildCommentsPart(comments: Comment[]) {
+  return comments.length
+    ? `**💬 Comments** (last ${comments.length})\n${(
+        await Promise.all(comments.map(formatComment))
+      ).join("\n")}`
+    : "";
+}
+
 export async function issueToEmbed(issue: {
   title: string;
   description: string;
@@ -24,11 +32,7 @@ export async function issueToEmbed(issue: {
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, MAX_COMMENTS);
 
-  const commentsString = slicedComments.length
-    ? `**💬 Comments** (last ${slicedComments.length})\n${(
-        await Promise.all(slicedComments.map(formatComment))
-      ).join("\n")}`
-    : "";
+  const commentsString = await buildCommentsPart(slicedComments);
 
   const updated = issue.updatedAt ?? issue.createdAt;
   const due = issue.dueDate ? new Date(issue.dueDate) : null;
@@ -80,4 +84,8 @@ async function formatComment(comment: Comment) {
       : undefined;
 
   return `${hyperlink(" 📎 ", comment.url)}${user?.name ?? "Unknown"}: ${removeNewlines(comment.body)} (${makeFluxerTimestamp(comment.createdAt, "R")})`;
+}
+
+export function isLinearIdentifier(str: string) {
+  return str.match(/^[a-zA-Z]+-[0-9]+$/);
 }
