@@ -1,7 +1,7 @@
 import { Client } from "@fluxerjs/core";
 import { serve } from "bun";
 import { env } from "./env";
-import { CommandHandler } from "./handlers/command-handler";
+import { CommandHandler, type Command } from "./handlers/command-handler";
 import { setup } from "./commands/setup";
 import { reset } from "./commands/reset";
 import { login } from "./commands/login";
@@ -18,6 +18,7 @@ import { db } from "./db";
 import { role } from "./commands/role";
 import { issues } from "./commands/issues";
 import { due } from "./commands/due";
+import { helpCommandExecute } from "./commands/help";
 
 const client = new Client({
   intents: 0,
@@ -35,16 +36,17 @@ client.handlers = {
   perms: permsHandler,
 };
 
-cmdHandler.register(setup);
-cmdHandler.register(reset);
-cmdHandler.register(login);
-cmdHandler.register(user);
-cmdHandler.register(newIssue);
-cmdHandler.register(label);
-cmdHandler.register(logout);
-cmdHandler.register(issues);
-cmdHandler.register(due);
-cmdHandler.register(role);
+client.commands = [setup, reset, login, user, newIssue, label, logout, issues, due, role];
+
+for (const cmd of client.commands) {
+  cmdHandler.register(cmd);
+}
+cmdHandler.register({
+  name: "help",
+  aliases: ["h"],
+  description: "get help",
+  execute: helpCommandExecute,
+});
 
 client.once("ready", async () => {
   logger.info(`${client.user?.username} ready!`);
@@ -64,6 +66,7 @@ declare module "@fluxerjs/core" {
       reaction: ReactionHandler;
       perms: PermissionHandler;
     };
+    commands: Command[];
   }
 }
 
