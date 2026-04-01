@@ -88,3 +88,16 @@ export function isAll(perms: PermissionSet, value: boolean) {
 export function countOccurrences(list: boolean[], value: boolean) {
   return list.filter((e) => e === value).length;
 }
+
+export function makeFluxerTimestamp(d: Date, type: "d" | "R") {
+  const t = Math.floor(d.getTime() / 1000);
+  return `<t:${t}:${type}>`;
+}
+
+export function removeNewlines(str: string) {
+  return str.replaceAll("\n", " ").replaceAll("\r", "");
+}
+
+export function hyperlink(str: string, url: string) {
+  return `[${str}](${url})`;
+}

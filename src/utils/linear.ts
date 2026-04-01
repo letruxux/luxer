@@ -1,6 +1,10 @@
 import type { Comment } from "@linear/sdk";
-import { bold } from ".";
+import { bold, hyperlink, makeFluxerTimestamp, removeNewlines } from ".";
 import { EmbedBuilder } from "./embed-builder";
+import { linearCache } from "@/lib/linear-cache";
+
+const MAX_DESCRIPTION_LENGTH = 1900;
+const MAX_COMMENTS = 3;
 
 export async function issueToEmbed(issue: {
   title: string;
@@ -16,44 +20,47 @@ export async function issueToEmbed(issue: {
   updatedAt?: Date;
   identifier?: string;
 }) {
-  const slicedComments = issue.comments?.slice(0, 3) ?? [];
-  const cachedUsers = new Map<string, { name: string; id: string }>();
-  const DEFAULT_USER = { name: "Unknown", id: "Unknown" };
-  async function formatComment(comment: Comment) {
-    const user = comment.userId
-      ? cachedUsers.has(comment.userId)
-        ? cachedUsers.get(comment.userId)!
-        : ((await comment.user?.then((u) => ({
-            name: u.name,
-            id: u.id,
-          }))) ?? DEFAULT_USER)
-      : DEFAULT_USER;
-    if (comment.userId && JSON.stringify(DEFAULT_USER) !== JSON.stringify(user)) {
-      cachedUsers.set(comment.userId, user);
-    }
+  const slicedComments = (issue.comments ?? [])
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, MAX_COMMENTS);
 
-    return `[📎](${comment.url}) ${user.name}: ${comment.body.replaceAll("\n", " ")} (<t:${Math.floor(comment.createdAt.getTime() / 1000)}:R>)`;
-  }
-  const commentsString =
-    slicedComments.length > 0
-      ? `**💬 Comments**: (Showing last ${slicedComments.length})
-${(await Promise.all(slicedComments.map(formatComment))).join("\n")}
-  `
-      : "";
+  const commentsString = slicedComments.length
+    ? `**💬 Comments** (last ${slicedComments.length})\n${(
+        await Promise.all(slicedComments.map(formatComment))
+      ).join("\n")}`
+    : "";
+
+  const updated = issue.updatedAt ?? issue.createdAt;
+  const due = issue.dueDate ? new Date(issue.dueDate) : null;
+
+  const description =
+    issue.description.length > MAX_DESCRIPTION_LENGTH
+      ? `${issue.description.slice(0, MAX_DESCRIPTION_LENGTH)}... [more ${
+          issue.description.length - MAX_DESCRIPTION_LENGTH
+        } characters]`
+      : issue.description;
 
   const embed = new EmbedBuilder()
     .setTitle(issue.identifier ? `[${issue.identifier}] ${issue.title}` : issue.title)
     .setDescription(
-      `
-${bold("State")}: ${issue.state}
-${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}
-${bold("Last updated")}: ${`<t:${Math.floor((issue.updatedAt ?? issue.createdAt).getTime() / 1000)}:R>`}
-${bold("Due date")}: ${issue.dueDate ? `<t:${Math.floor(new Date(issue.dueDate).getTime() / 1000)}:d> ${Date.now() > new Date(issue.dueDate).getTime() ? "(overdue)" : ""}` : "(none)"}
-
-${issue.description.slice(0, 2000)}${issue.description.length > 2000 ? `... [more ${issue.description.length - 2000} characters]` : ""} 
-
-${commentsString}
-      `.trim(),
+      [
+        `${bold("State")}: ${issue.state}`,
+        `${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}`,
+        `${bold("Last updated")}: ${makeFluxerTimestamp(updated, "R")}`,
+        `${bold("Due date")}: ${
+          due
+            ? `${makeFluxerTimestamp(due, "d")}${
+                Date.now() > due.getTime() ? " (overdue)" : ""
+              }`
+            : "(none)"
+        }`,
+        "",
+        description,
+        "\n",
+        commentsString,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     )
     .setAuthor({
       name: issue.creatorName ?? "Linear",
@@ -61,9 +68,16 @@ ${commentsString}
     })
     .setTimestamp(issue.createdAt);
 
-  if (issue.url) {
-    embed.setURL(issue.url);
-  }
+  if (issue.url) embed.setURL(issue.url);
 
   return embed;
+}
+
+async function formatComment(comment: Comment) {
+  const user =
+    comment.userId && comment.user
+      ? await linearCache.getOrSetUser(comment.userId, comment.user)
+      : undefined;
+
+  return `${hyperlink(" 📎 ", comment.url)}${user?.name ?? "Unknown"}: ${removeNewlines(comment.body)} (${makeFluxerTimestamp(comment.createdAt, "R")})`;
 }
