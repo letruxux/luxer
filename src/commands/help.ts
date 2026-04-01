@@ -12,7 +12,7 @@ function commandToEmojis(cmd: Command) {
 }
 
 async function helpGeneralEmbed(msg: Message, pref: string) {
-  const embed = new EmbedBuilder().setTitle(`${msg.client.user?.username} commands`);
+  const embed = new EmbedBuilder().setTitle(`${msg.client.user?.username} - Help`);
 
   const adminCmds = msg.client.commands.filter((e) => e.adminOnly);
   const nonAdminCmds = msg.client.commands.filter((e) => !e.adminOnly);
@@ -45,6 +45,10 @@ async function helpGeneralEmbed(msg: Message, pref: string) {
       name: "⬇️ Start here",
       value: format(normal),
     },
+  );
+
+  embed.setDescription(
+    "**Setup guide**\n1. `l!login` to login with Linear\n2. `l!setup` to set up your team's community\n3. profit :p",
   );
 
   await msg.reply({ embeds: [embed] });
