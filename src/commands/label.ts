@@ -1,8 +1,5 @@
-import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, embedOf, filterIdArg, yargs } from "@/utils";
-import { db } from "@/db";
-import { issueIdsMessages } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
+import { code, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
 import { linearCache } from "@/lib/linear-cache";
@@ -18,23 +15,9 @@ export const label = {
     const linear = userLinear!;
     const teamId = config!.teamId!;
 
-    const issueId = msg.referencedMessage
-      ? await db
-          .select()
-          .from(issueIdsMessages)
-          .where(eq(issueIdsMessages.messageId, msg.referencedMessage!.id))
-          .limit(1)
-          .execute()
-          .then((e) => e[0]?.issueId ?? undefined)
-      : (yargs(args, { alias: { i: "id" } }).get("id") as string | undefined);
+    const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 
-    if (!issueId) {
-      throw new CommandUserError(
-        "No issue provided, either reply to an issue or use the `--id <ABC-123>` flag",
-      );
-    }
-
-    const labels = filterIdArg(args)
+    const labels = filteredArgs
       .join(" ")
       .split(",")
       .map((e) => e.trim().toLowerCase());
@@ -62,7 +45,7 @@ export const label = {
     const { success, issue } = await linear.client.updateIssue(issueId, {
       labelIds: labelIds.filter((l) => l !== undefined),
     });
-    if (!success) throw new CommandUserError("Linear API error");
+    if (!success) throw new CommandLinearError();
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
     const issueResult = await issue!;

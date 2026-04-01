@@ -274,3 +274,10 @@ export class CommandUserError extends Error {
     this.name = "CommandUserError";
   }
 }
+
+export class CommandLinearError extends CommandUserError {
+  constructor() {
+    super("Linear API error");
+    this.name = "CommandLinearError";
+  }
+}

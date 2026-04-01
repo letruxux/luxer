@@ -2,6 +2,11 @@ import type { Options } from "yargs-parser";
 import yargsParser from "yargs-parser";
 import { EmbedBuilder } from "./embed-builder";
 import type { PermissionSet } from "@/handlers/permission-handler";
+import type { Message } from "@fluxerjs/core";
+import { db } from "@/db";
+import { issueIdsMessages } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { CommandUserError } from "@/handlers/command-handler";
 
 export function code(str: string) {
   return `\`${str}\``;
@@ -110,4 +115,27 @@ export function removeNewlines(str: string) {
 
 export function hyperlink(str: string, url: string) {
   return `[${str}](${url})`;
+}
+
+export async function parseArgsAndIssueId(
+  msg: Message,
+  args: string[],
+): Promise<{ issueId: string; args: string[] }> {
+  const issueId = msg.referencedMessage
+    ? await db
+        .select()
+        .from(issueIdsMessages)
+        .where(eq(issueIdsMessages.messageId, msg.referencedMessage!.id))
+        .limit(1)
+        .execute()
+        .then((e) => e[0]?.issueId ?? undefined)
+    : (yargs(args, { alias: { i: "id" } }).get("id") as string | undefined);
+
+  if (!issueId) {
+    throw new CommandUserError(
+      "No issue provided, either reply to an issue or use the `--id <ABC-123>` flag",
+    );
+  }
+
+  return { issueId, args: filterIdArg(args) };
 }

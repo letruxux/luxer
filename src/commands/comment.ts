@@ -1,8 +1,5 @@
-import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, embedOf, filterIdArg, hyperlink, textEmbedOf, yargs } from "@/utils";
-import { db } from "@/db";
-import { issueIdsMessages } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
+import { code, embedOf, hyperlink, parseArgsAndIssueId, textEmbedOf } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
 import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
@@ -20,21 +17,7 @@ export const comment = {
   async execute(msg, args, { userLinear }) {
     const linear = userLinear!;
 
-    const issueId = msg.referencedMessage
-      ? await db
-          .select()
-          .from(issueIdsMessages)
-          .where(eq(issueIdsMessages.messageId, msg.referencedMessage!.id))
-          .limit(1)
-          .execute()
-          .then((e) => e[0]?.issueId ?? undefined)
-      : (yargs(args, { alias: { i: "id" } }).get("id") as string | undefined);
-
-    if (!issueId) {
-      throw new CommandUserError(
-        "No issue provided, either reply to an issue or use the `--id <ABC-123>` flag",
-      );
-    }
+    const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 
     const issue = await linearCache.getOrSetIssue(issueId, linear.client.issue(issueId));
     const hasCommentPermission = await msg.client.handlers.perms.can(
@@ -54,7 +37,7 @@ export const comment = {
       throw new CommandUserError("Issue not found");
     }
 
-    let body = filterIdArg(args).join(" ").trim();
+    let body = filteredArgs.join(" ").trim();
     let i = 1;
     for (const attachment of msg.attachments.values()) {
       if (attachment.url) {
@@ -103,10 +86,10 @@ export const comment = {
       issueId,
       body,
     });
-    if (!result) throw new CommandUserError("Linear API error");
+    if (!result) throw new CommandLinearError();
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
-    if (!result.comment) throw new CommandUserError("Linear API error");
+    if (!result.comment) throw new CommandLinearError();
 
     const resultComment = await result.comment;
     const newComments = [...comments, resultComment].sort(

@@ -1,4 +1,4 @@
-import { CommandUserError, type Command } from "@/handlers/command-handler";
+import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
 import { code, dueToSeconds, embedOf, yargs } from "@/utils";
 import type { Options } from "yargs-parser";
 import z from "zod";
@@ -160,7 +160,7 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
       dueDate: due ? new Date(Date.now() + due * 1000) : undefined,
     });
 
-    if (!success) throw new CommandUserError("Linear API error");
+    if (!success) throw new CommandLinearError();
 
     const finalIssue = await _issue!;
     const viewer = finalIssue.creatorId
