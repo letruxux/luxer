@@ -1,5 +1,5 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, embedOf, yargs } from "@/utils";
+import { code, embedOf, filterIdArg, yargs } from "@/utils";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -34,7 +34,7 @@ export const state = {
       );
     }
 
-    const stateName = msg.content.split(" ").slice(1).join(" ").trim().toLowerCase();
+    const stateName = filterIdArg(args).join(" ").trim().toLowerCase();
 
     if (stateName.length === 0) {
       throw new CommandUserError("No state provided");

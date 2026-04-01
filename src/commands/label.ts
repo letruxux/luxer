@@ -1,5 +1,5 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, embedOf, yargs } from "@/utils";
+import { code, embedOf, filterIdArg, yargs } from "@/utils";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -34,9 +34,7 @@ export const label = {
       );
     }
 
-    const labels = msg.content
-      .split(" ")
-      .slice(1)
+    const labels = filterIdArg(args)
       .join(" ")
       .split(",")
       .map((e) => e.trim().toLowerCase());

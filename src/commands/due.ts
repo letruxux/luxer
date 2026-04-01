@@ -1,5 +1,5 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, dueToSeconds, embedOf, yargs } from "@/utils";
+import { code, dueToSeconds, embedOf, filterIdArg, yargs } from "@/utils";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -32,7 +32,7 @@ export const due = {
       );
     }
 
-    const due = msg.content.split(" ").slice(1).join(" ").trim().toLowerCase();
+    const due = filterIdArg(args).join(" ").trim().toLowerCase();
 
     if (due.length === 0) {
       throw new CommandUserError("No due date provided");

@@ -43,6 +43,16 @@ export function yargs(args: string[], config: Options) {
   return new Map(Object.entries(yargsParser(args, config)));
 }
 
+export function filterIdArg(args: string[]) {
+  const filteredArgs = args.filter((arg, i) => {
+    if (arg === "--id" || arg === "-i") return false;
+    if (i > 0 && (args[i - 1] === "--id" || args[i - 1] === "-i")) return false;
+    return true;
+  });
+
+  return filteredArgs;
+}
+
 export function dueToSeconds(str: string): number | null {
   str = str.trim().toLowerCase();
 
