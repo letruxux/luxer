@@ -70,8 +70,9 @@ async function buildIssueEmbed(
     creatorPicture: enriched.creatorPicture ?? undefined,
   });
 
+  const cmd = (name: string) => quote(`${prefix}${name}`);
   embed.setFooter({
-    text: `Reply to this message to use commands such as ${quote(prefix + "comment")} and ${quote(prefix + "label")}`,
+    text: `Reply with ${cmd("comment")}, ${cmd("label")}, ${cmd("due")} or ${cmd("state")}.`,
   });
 
   return embed;

@@ -46,7 +46,8 @@ export async function issueToEmbed(issue: {
       [
         `${bold("State")}: ${issue.state}`,
         `${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}`,
-        `${bold("Last updated")}: ${makeFluxerTimestamp(updated, "R")}`,
+        `${bold("Created at")}: ${makeFluxerTimestamp(issue.createdAt, "R")}`,
+        `${bold("Updated at")}: ${makeFluxerTimestamp(updated, "R")}`,
         `${bold("Due date")}: ${
           due
             ? `${makeFluxerTimestamp(due, "d")}${
@@ -54,7 +55,7 @@ export async function issueToEmbed(issue: {
               }`
             : "(none)"
         }`,
-        "",
+        "\n",
         description,
         "\n",
         commentsString,
@@ -65,8 +66,7 @@ export async function issueToEmbed(issue: {
     .setAuthor({
       name: issue.creatorName ?? "Linear",
       iconURL: issue.creatorPicture,
-    })
-    .setTimestamp(issue.createdAt);
+    });
 
   if (issue.url) embed.setURL(issue.url);
 

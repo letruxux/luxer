@@ -18,6 +18,7 @@ import { db } from "./db";
 import { role } from "./commands/role";
 import { issues } from "./commands/issues";
 import { due } from "./commands/due";
+import { state } from "./commands/state";
 import { helpCommandExecute } from "./commands/help";
 
 const client = new Client({
@@ -36,7 +37,7 @@ client.handlers = {
   perms: permsHandler,
 };
 
-client.commands = [setup, reset, login, user, newIssue, label, logout, issues, due, role];
+client.commands = [setup, reset, login, user, newIssue, label, logout, issues, due, state, role];
 
 for (const cmd of client.commands) {
   cmdHandler.register(cmd);
