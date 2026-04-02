@@ -1,34 +1,6 @@
-import { LinearClient } from "@linear/sdk";
+import { LinearClient, type Team, type Comment, type User } from "@linear/sdk";
 import { linearCache } from "./linear-cache";
 import { env } from "@/env";
-
-export interface LinearIssue {
-  id: string;
-  title: string;
-  identifier: string;
-  url: string;
-  state?: {
-    name: string;
-  };
-}
-
-export interface LinearTeam {
-  id: string;
-  name: string;
-}
-
-export interface LinearComment {
-  id: string;
-  body: string;
-  url: string;
-}
-
-export interface LinearUser {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string;
-}
 
 export interface OAuthTokens {
   access_token: string;
@@ -40,20 +12,6 @@ class LinearHelpers {
     const now = new Date();
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     return dayAgo;
-  };
-
-  static countIssuesPerState = (issues: LinearIssue[]) => {
-    const counts = issues.reduce(
-      (acc, issue) => {
-        const state = issue.state?.name;
-        if (!state) return acc;
-        acc[state] = (acc[state] ?? 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return counts;
   };
 
   static async refreshLinearToken(refreshToken: string): Promise<OAuthTokens> {
@@ -92,14 +50,9 @@ export class Linear {
     return nodes;
   }
 
-  async getTeams(): Promise<LinearTeam[]> {
+  async getTeams(): Promise<Team[]> {
     const result = await this.client.teams();
-    const nodes = result.nodes;
-    return nodes.map((team) => ({
-      id: team.id,
-      createdAt: team.createdAt,
-      name: team.name ?? "",
-    }));
+    return result.nodes;
   }
 
   async getStatesOfTeam(teamId: string) {
@@ -130,28 +83,6 @@ export class Linear {
     if (!result) return null;
 
     return result;
-  }
-
-  async createComment(issueId: string, body: string): Promise<LinearComment> {
-    const result = await this.client.createComment({
-      issueId,
-      body,
-    });
-
-    if (!result.success) {
-      throw new Error("Failed to create comment");
-    }
-
-    const comment = await result.comment;
-    if (!comment) {
-      throw new Error("Failed to create comment");
-    }
-
-    return {
-      id: comment.id,
-      body: comment.body ?? "",
-      url: comment.url ?? "",
-    };
   }
 
   async getViewer() {
