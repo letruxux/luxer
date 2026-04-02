@@ -37,12 +37,15 @@ export async function issueToEmbed(issue: {
   const updated = issue.updatedAt ?? issue.createdAt;
   const due = issue.dueDate ? new Date(issue.dueDate) : null;
 
+  const issueDesc = issue.description.trim();
   const description =
-    issue.description.length > MAX_DESCRIPTION_LENGTH
-      ? `${issue.description.slice(0, MAX_DESCRIPTION_LENGTH)}... [more ${
-          issue.description.length - MAX_DESCRIPTION_LENGTH
-        } characters]`
-      : issue.description;
+    issueDesc.length === 0
+      ? "(no description)"
+      : issueDesc.length > MAX_DESCRIPTION_LENGTH
+        ? `${issueDesc.slice(0, MAX_DESCRIPTION_LENGTH)}... [more ${
+            issueDesc.length - MAX_DESCRIPTION_LENGTH
+          } characters]`
+        : issueDesc;
 
   const embed = new EmbedBuilder()
     .setTitle(issue.identifier ? `[${issue.identifier}] ${issue.title}` : issue.title)
@@ -50,8 +53,8 @@ export async function issueToEmbed(issue: {
       [
         `${bold("State")}: ${issue.state}`,
         `${bold("Labels")}: ${issue.labels.length ? issue.labels.join(", ") : "(none)"}`,
-        `${bold("Created at")}: ${makeFluxerTimestamp(issue.createdAt, "R")}`,
-        `${bold("Updated at")}: ${makeFluxerTimestamp(updated, "R")}`,
+        `${bold("Created")}: ${makeFluxerTimestamp(issue.createdAt, "R")}`,
+        `${bold("Updated")}: ${makeFluxerTimestamp(updated, "R")}`,
         `${bold("Due date")}: ${
           due
             ? `${makeFluxerTimestamp(due, "d")}${
@@ -59,13 +62,9 @@ export async function issueToEmbed(issue: {
               }`
             : "(none)"
         }`,
-        "\n",
-        description,
-        "\n",
+        description ? `\n${description}\n` : "",
         commentsString,
-      ]
-        .filter(Boolean)
-        .join("\n"),
+      ].join("\n"),
     )
     .setAuthor({
       name: issue.creatorName ?? "Linear",

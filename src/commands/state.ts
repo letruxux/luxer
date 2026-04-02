@@ -1,4 +1,8 @@
-import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
+import {
+  CommandLinearError,
+  CommandUserError,
+  type Command,
+} from "@/handlers/command-handler";
 import { code, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
@@ -40,6 +44,9 @@ export const state = {
       stateId: stateObj.id,
     });
     if (!success) throw new CommandLinearError();
+
+    linearCache.invalidateIssue(issueId);
+    linearCache.invalidateState(issueId);
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
     const resultIssue = await issue!;
