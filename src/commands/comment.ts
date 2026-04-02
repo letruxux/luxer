@@ -6,10 +6,10 @@ import {
 import { code, embedOf, hyperlink, parseArgsAndIssueId, textEmbedOf } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
-import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 import { linearCache } from "@/lib/linear-cache";
 import { buildIssueEmbed } from "./issues";
 import { buildCommentsPart } from "@/utils/linear";
+import { askConfirmation } from "./_confirmation";
 
 export const comment = {
   name: "comment",
@@ -66,25 +66,13 @@ export const comment = {
       })
       .setColor(0x00ff00);
 
-    const respMsg = await msg.reply({
+    const { confirmed, message: respMsg } = await askConfirmation({
+      msg,
       content: "**Are you sure?** (Expires in 2m)",
-      embeds: [confirmationEmbed],
+      embed: confirmationEmbed,
     });
 
-    const resp = await msg.client.handlers.reaction.wait(respMsg, {
-      allowedUserIds: [msg.author.id],
-      allowedEmojis: YES_NO_EMOJIS,
-      timeout: 120_000,
-    });
-
-    if (!resp || resp.emoji.name !== YES_EMOJI) {
-      await respMsg.edit({
-        content: "",
-        embeds: [msg.client.handlers.command.buildErrorEmbed("Cancelled")],
-      });
-      await respMsg.removeAllReactions();
-      return;
-    }
+    if (!confirmed) return;
 
     const result = await linear.client.createComment({
       issueId,
@@ -112,6 +100,5 @@ export const comment = {
     await respMsg.edit({
       embeds: [finalEmbed],
     });
-    await respMsg.removeAllReactions();
   },
 } satisfies Command;
