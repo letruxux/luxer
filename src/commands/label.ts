@@ -129,7 +129,6 @@ export const label = {
     });
     if (!success) throw new CommandLinearError();
 
-    linearCache.invalidateIssue(issueId);
     linearCache.invalidateLabels(issueId);
 
     await msg.reply(

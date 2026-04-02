@@ -45,7 +45,6 @@ export const state = {
     });
     if (!success) throw new CommandLinearError();
 
-    linearCache.invalidateIssue(issueId);
     linearCache.invalidateState(issueId);
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
