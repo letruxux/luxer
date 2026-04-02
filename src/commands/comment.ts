@@ -17,7 +17,7 @@ export const comment = {
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
-  requirePerms: [Permission.UPDATE_ISSUE],
+  requirePerms: [Permission.COMMENT_ISSUE, Permission.READ_COMMENT],
   async execute(msg, args, { userLinear }) {
     const linear = userLinear!;
 

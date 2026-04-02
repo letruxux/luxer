@@ -8,6 +8,7 @@ import { login } from "./commands/login";
 import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
+import TextInputHandler from "./handlers/textinput-handler";
 import logger from "./lib/logger";
 import { PermissionHandler } from "./handlers/permission-handler";
 import { authApp } from "./login-http";
@@ -22,6 +23,7 @@ import { state } from "./commands/state";
 import { helpCommandExecute } from "./commands/help";
 import { team } from "./commands/team";
 import { comment } from "./commands/comment";
+import { manage } from "./commands/manage";
 
 const client = new Client({
   intents: 0,
@@ -30,12 +32,14 @@ const client = new Client({
 const cmdHandler = new CommandHandler("l!", client);
 const evHandler = new EventHandler(client);
 const reactHandler = new ReactionHandler(client);
+const textInputHandler = new TextInputHandler(client);
 const permsHandler = new PermissionHandler();
 
 client.handlers = {
   command: cmdHandler,
   event: evHandler,
   reaction: reactHandler,
+  textInput: textInputHandler,
   perms: permsHandler,
 };
 
@@ -53,6 +57,7 @@ client.commands = [
   role,
   team,
   comment,
+  manage,
 ];
 
 for (const cmd of client.commands) {
@@ -81,6 +86,7 @@ declare module "@fluxerjs/core" {
       command: CommandHandler;
       event: EventHandler;
       reaction: ReactionHandler;
+      textInput: TextInputHandler;
       perms: PermissionHandler;
     };
     commands: Command[];

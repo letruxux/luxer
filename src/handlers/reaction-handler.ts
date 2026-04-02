@@ -65,6 +65,10 @@ export default class ReactionHandler {
     }
   }
 
+  public clearReactionCacheForMessage(messageId: string) {
+    this.reactionsCache.delete(messageId);
+  }
+
   private cleanup(messageId: string, id: string) {
     const list = this.waitingForReactions.get(messageId);
     if (!list) return;
@@ -108,18 +112,16 @@ if (reaction.emoji.name === "👍") {
     },
   ): Promise<MessageReaction | null> {
     return new Promise(async (resolve) => {
-      (async () => {
-        for (const emoji of data.allowedEmojis) {
-          const cached = this.reactionsCache.get(message.id) ?? new Set();
+      for (const emoji of data.allowedEmojis) {
+        const cached = this.reactionsCache.get(message.id) ?? new Set();
 
-          if (cached.has(emoji)) continue;
+        if (cached.has(emoji)) continue;
 
-          await message.react(emoji);
+        await message.react(emoji);
 
-          cached.add(emoji);
-          this.reactionsCache.set(message.id, cached);
-        }
-      })();
+        cached.add(emoji);
+        this.reactionsCache.set(message.id, cached);
+      }
       const id = Math.random().toString(36).slice(2, 10);
 
       const timeout = setTimeout(() => {

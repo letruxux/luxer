@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 import { env } from "@/env";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { generateCodeVerifier, generateCodeChallenge, addStateLogin } from "@/login-http";
-import { embedOf } from "@/utils";
+import { bold, embedOf } from "@/utils";
 import { db } from "@/db";
 import { EmbedBuilder } from "@/utils/embed-builder";
 
@@ -41,6 +41,8 @@ export const login = {
       embedOf(
         new EmbedBuilder()
           .setTitle("Click here to login with `linear.app`")
+          .setDescription(bold("Make sure to select the correct workspace!"))
+          .setThumbnail("https://i.ibb.co/s9bgRyTy/chrome-Hmjrp4-NPXc.png")
           .setURL(authUrl.toString())
           .setColor(0x00ff00),
       ),

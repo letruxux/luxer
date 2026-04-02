@@ -23,14 +23,15 @@ export const state = {
 
     const stateName = filteredArgs.join(" ").trim().toLowerCase();
 
-    if (stateName.length === 0) {
-      throw new CommandUserError("No state provided");
-    }
-
     const teamStates = await linearCache.teamStates.getOrSet(
       teamId,
       linear.getStatesOfTeam(teamId),
     );
+
+    if (stateName.length === 0) {
+      const stateNames = teamStates.map((s) => code(s.name)).join(", ");
+      throw new CommandUserError(`No state provided.\nValid: ${stateNames}`);
+    }
 
     const stateObj = teamStates.find((s) => s.name.toLowerCase() === stateName);
 

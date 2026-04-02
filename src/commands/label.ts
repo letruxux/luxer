@@ -9,7 +9,7 @@ import { Permission } from "@/handlers/permission-handler";
 import { linearCache } from "@/lib/linear-cache";
 import type { IssueLabel } from "@linear/sdk";
 
-const validSubcommands = ["add", "remove", "overwrite"];
+const validSubcommands = ["add", "remove", "overwrite", "list"];
 
 function parseInputLabels(args: string[]): string[] {
   return args
@@ -69,7 +69,7 @@ export const label = {
     const teamId = config!.teamId!;
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
-    const subcommand = filteredArgs[0]?.toLowerCase();
+    let subcommand = filteredArgs[0]?.toLowerCase();
     const subcommandArgs = filteredArgs.slice(1);
 
     const teamLabels = await linearCache.teamLabels.getOrSet(
@@ -82,7 +82,11 @@ export const label = {
     const currentLabels = teamLabels.filter((l) => currentLabelIds.includes(l.id));
     const prefix = await msg.client.handlers.command.getPrefix(msg);
 
-    if (!subcommand || !validSubcommands.includes(subcommand)) {
+    if (!subcommand) {
+      subcommand = "list";
+    }
+
+    if (!validSubcommands.includes(subcommand)) {
       throw new CommandUserError(
         `Invalid subcommand. Use: ${validSubcommands.map(code).join(", ")}`,
       );

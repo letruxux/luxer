@@ -30,7 +30,7 @@ async function helpGeneralEmbed(msg: Message, pref: string) {
 
   embed.addFields(
     {
-      name: "🛡️ Administrator commands",
+      name: "🛡️ Admin commands",
       value: format(adminCmds),
     },
     {
