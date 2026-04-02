@@ -7,7 +7,6 @@ import { code, dueToSeconds, embedOf, yargs } from "@/utils";
 import type { Options } from "yargs-parser";
 import z from "zod";
 import { issueToEmbed } from "@/utils/linear";
-import { Permission } from "@/handlers/permission-handler";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { linearCache } from "@/lib/linear-cache";
 import { askConfirmation } from "./_confirmation";
@@ -61,7 +60,6 @@ export const newIssue = {
   requireConfig: true,
   guildOnly: true,
   aliases: ["new", "n", "newissue", "createissue"],
-  requirePerms: [Permission.CREATE_ISSUE],
   async execute(msg, _rawArgs, extra) {
     const linear = extra?.userLinear;
     const teamId = extra?.config?.teamId;

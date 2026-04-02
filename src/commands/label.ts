@@ -5,7 +5,6 @@ import {
 } from "@/handlers/command-handler";
 import { bold, code, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { Permission } from "@/handlers/permission-handler";
 import { linearCache } from "@/lib/linear-cache";
 import type { IssueLabel } from "@linear/sdk";
 
@@ -63,7 +62,6 @@ export const label = {
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
-  requirePerms: [Permission.UPDATE_ISSUE],
   async execute(msg, args, extra) {
     const linear = extra.userLinear!;
     const teamId = extra.config!.teamId!;

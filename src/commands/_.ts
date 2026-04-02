@@ -5,7 +5,6 @@ import { user } from "./user";
 import { newIssue } from "./new";
 import { label } from "./label";
 import { logout } from "./logout";
-import { role } from "./role";
 import { issues } from "./issues";
 import { due } from "./due";
 import { state } from "./state";
@@ -25,7 +24,6 @@ export const commands = [
   issues,
   due,
   state,
-  role,
   team,
   comment,
   manage,

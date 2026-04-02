@@ -5,7 +5,6 @@ import {
 } from "@/handlers/command-handler";
 import { code, embedOf, hyperlink, parseArgsAndIssueId, textEmbedOf } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { Permission } from "@/handlers/permission-handler";
 import { linearCache } from "@/lib/linear-cache";
 import { buildIssueEmbed } from "./issues";
 import { buildCommentsPart } from "@/utils/linear";
@@ -17,26 +16,18 @@ export const comment = {
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
-  requirePerms: [Permission.COMMENT_ISSUE, Permission.READ_COMMENT],
   async execute(msg, args, extra) {
     const linear = extra.userLinear!;
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 
     const issue = await linearCache.issue.getOrSet(issueId, linear.client.issue(issueId));
-    const hasCommentPermission = await msg.client.handlers.perms.can(
-      msg.author,
-      msg.guildId!,
-      Permission.READ_COMMENT,
-    );
 
-    const comments = hasCommentPermission
-      ? await linear.client
-          .comments({
-            filter: { issue: { id: { eq: issue.id } } },
-          })
-          .then((e) => e.nodes.reverse())
-      : [];
+    const comments = await linear.client
+      .comments({
+        filter: { issue: { id: { eq: issue.id } } },
+      })
+      .then((e) => e.nodes.reverse());
     if (!issue) {
       throw new CommandUserError("Issue not found");
     }

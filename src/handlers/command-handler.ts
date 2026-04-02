@@ -7,8 +7,7 @@ import { db } from "@/db";
 import { guildConfigs, userTokens } from "@/db/schema";
 import logger from "@/lib/logger";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { Permission } from "./permission-handler";
-import { code, embedOf, fixCasing } from "@/utils";
+import { code, embedOf } from "@/utils";
 import { Linear } from "@/lib/linear";
 import { linearCache } from "@/lib/linear-cache";
 import { eq } from "drizzle-orm";
@@ -29,7 +28,6 @@ export interface Command {
   name: string;
   requireConfig?: boolean;
   requireAccountLinked?: boolean;
-  requirePerms?: Permission[];
 }
 
 export type GuildConfig = typeof guildConfigs.$inferSelect;
@@ -178,27 +176,6 @@ export class CommandHandler {
         if (!member?.permissions.has(PermissionFlags.Administrator)) {
           await msg.reply(
             this.buildErrorPayload(`This command requires administrator perms!`),
-          );
-          return true;
-        }
-      }
-
-      if (command.requirePerms) {
-        const perms = await this.client.handlers.perms.get(msg.author, msg.guild!.id);
-        const missingPerms = command.requirePerms.filter((p) => !perms[p]);
-
-        const member = msg.guild?.members.get(msg.author.id);
-        if (
-          missingPerms.length > 0 &&
-          !member?.permissions.has(PermissionFlags.Administrator)
-        ) {
-          await msg.reply(
-            this.buildErrorPayload(
-              `You need the following permissions to use this command: ${missingPerms
-                .map(fixCasing)
-                .map(code)
-                .join(", ")}`,
-            ),
           );
           return true;
         }

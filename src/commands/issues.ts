@@ -1,7 +1,6 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { bold, code, quote, textEmbedOf } from "@/utils";
 import { isLinearIdentifier, issueToEmbed } from "@/utils/linear";
-import { Permission } from "@/handlers/permission-handler";
 import { PaginationOrderBy } from "@linear/sdk";
 import { linearCache } from "@/lib/linear-cache";
 import type { Message } from "@fluxerjs/core";
@@ -219,19 +218,11 @@ async function searchIssues(query: string, linear: Linear, teamId: string) {
 }
 
 async function viewIssue(issue: Issue, linear: Linear, msg: Message) {
-  const hasCommentPermission = await msg.client.handlers.perms.can(
-    msg.author,
-    msg.guildId!,
-    Permission.READ_COMMENT,
-  );
-
-  const comments: Comment[] = hasCommentPermission
-    ? await linear.client
-        .comments({
-          filter: { issue: { id: { eq: issue.id } } },
-        })
-        .then((e) => e.nodes.reverse())
-    : [];
+  const comments: Comment[] = await linear.client
+    .comments({
+      filter: { issue: { id: { eq: issue.id } } },
+    })
+    .then((e) => e.nodes.reverse());
 
   const embeds = await getPageEmbeds({
     issues: [issue],
@@ -371,7 +362,6 @@ export const issues = {
   requireConfig: true,
   guildOnly: true,
   aliases: ["i", "issue"],
-  requirePerms: [Permission.READ_ISSUE],
 
   async execute(msg, _rawArgs, extra) {
     const linear = extra.userLinear!;

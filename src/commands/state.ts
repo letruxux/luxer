@@ -5,7 +5,6 @@ import {
 } from "@/handlers/command-handler";
 import { code, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { Permission } from "@/handlers/permission-handler";
 import { linearCache } from "@/lib/linear-cache";
 
 export const state = {
@@ -14,7 +13,6 @@ export const state = {
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
-  requirePerms: [Permission.UPDATE_ISSUE],
   async execute(msg, args, extra) {
     const linear = extra.userLinear!;
     const teamId = extra.config!.teamId!;

@@ -5,7 +5,6 @@ import {
 } from "@/handlers/command-handler";
 import { dueToSeconds, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { Permission } from "@/handlers/permission-handler";
 
 export const due = {
   name: "due",
@@ -13,7 +12,6 @@ export const due = {
   guildOnly: true,
   requireAccountLinked: true,
   requireConfig: true,
-  requirePerms: [Permission.UPDATE_ISSUE],
   async execute(msg, args, extra) {
     const linear = extra.userLinear!;
 
