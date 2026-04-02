@@ -1,14 +1,14 @@
-import { Hono } from "hono";
-import { db } from "./db";
-import { userTokens } from "./db/schema";
-import { env } from "./env";
+import { db } from "@/db";
+import { userTokens } from "@/db/schema";
+import { bold } from "@/utils";
+import { EmbedBuilder } from "@fluxerjs/core";
 import { REST, Routes } from "@fluxerjs/rest";
-import logger from "./lib/logger";
-import { EmbedBuilder } from "./utils/embed-builder";
-import { bold } from "./utils";
-import type { OAuthTokens } from "./lib/linear";
+import { Hono } from "hono";
+import type { OAuthTokens } from "./linear";
+import logger from "./logger";
+import { env } from "@/env";
 
-export const authApp = new Hono();
+const authRoutes = new Hono();
 const fluxerRest = new REST();
 fluxerRest.setToken(env.FLUXER_TOKEN);
 
@@ -46,7 +46,7 @@ export function addStateLogin(
   oauthStates.set(state, data);
 }
 
-authApp.get("/callback", async (c) => {
+authRoutes.get("/", async (c) => {
   const code = c.req.query("code");
   const state = c.req.query("state");
   const error = c.req.query("error");
@@ -131,3 +131,5 @@ authApp.get("/callback", async (c) => {
 
   return c.text("success! go back to fluxer");
 });
+
+export default authRoutes;

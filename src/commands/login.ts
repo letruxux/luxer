@@ -1,7 +1,11 @@
 import { nanoid } from "nanoid";
 import { env } from "@/env";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { generateCodeVerifier, generateCodeChallenge, addStateLogin } from "@/login-http";
+import {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  addStateLogin,
+} from "@/login-routes";
 import { bold, embedOf } from "@/utils";
 import { db } from "@/db";
 import { EmbedBuilder } from "@/utils/embed-builder";

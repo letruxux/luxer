@@ -2,28 +2,21 @@ import { Client } from "@fluxerjs/core";
 import { serve } from "bun";
 import { env } from "./env";
 import { CommandHandler, type Command } from "./handlers/command-handler";
-import { setup } from "./commands/setup";
-import { reset } from "./commands/reset";
-import { login } from "./commands/login";
-import { user } from "./commands/user";
 import EventHandler from "./handlers/event-handler";
 import ReactionHandler from "./handlers/reaction-handler";
 import TextInputHandler from "./handlers/textinput-handler";
 import logger from "./lib/logger";
 import { PermissionHandler } from "./handlers/permission-handler";
-import { authApp } from "./login-http";
-import { newIssue } from "./commands/new";
-import { label } from "./commands/label";
-import { logout } from "./commands/logout";
+import authRoutes from "./lib/auth-routes";
 import { db } from "./db";
-import { role } from "./commands/role";
-import { issues } from "./commands/issues";
-import { due } from "./commands/due";
-import { state } from "./commands/state";
-import { helpCommandExecute } from "./commands/help";
-import { team } from "./commands/team";
-import { comment } from "./commands/comment";
-import { manage } from "./commands/manage";
+import webhookRoutes from "./lib/webhook/routes";
+import { Hono } from "hono";
+import { commands, helpCommandExecute } from "./commands/_";
+
+const http = new Hono();
+
+http.route("/callback", authRoutes);
+http.route("/webhook", webhookRoutes);
 
 const client = new Client({
   intents: 0,
@@ -43,22 +36,7 @@ client.handlers = {
   perms: permsHandler,
 };
 
-client.commands = [
-  setup,
-  reset,
-  login,
-  user,
-  newIssue,
-  label,
-  logout,
-  issues,
-  due,
-  state,
-  role,
-  team,
-  comment,
-  manage,
-];
+client.commands = commands;
 
 for (const cmd of client.commands) {
   cmdHandler.register(cmd);
@@ -94,7 +72,7 @@ declare module "@fluxerjs/core" {
 }
 
 const server = serve({
-  fetch: authApp.fetch,
+  fetch: http.fetch,
   port: env.PORT,
 });
 
