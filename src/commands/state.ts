@@ -27,7 +27,7 @@ export const state = {
       throw new CommandUserError("No state provided");
     }
 
-    const teamStates = await linearCache.getOrSetTeamStates(
+    const teamStates = await linearCache.teamStates.getOrSet(
       teamId,
       linear.getStatesOfTeam(teamId),
     );
@@ -45,7 +45,7 @@ export const state = {
     });
     if (!success) throw new CommandLinearError();
 
-    linearCache.invalidateState(issueId);
+    linearCache.issueState.invalidate(issueId);
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
     const resultIssue = await issue!;

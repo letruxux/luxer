@@ -109,7 +109,7 @@ export class Linear {
   }
 
   async getLabelsOfTeam(teamId: string) {
-    const result = await linearCache.getOrSetLabels(
+    const result = await linearCache.issueLabels.getOrSet(
       teamId,
       this.client.team(teamId).then((e) => e.labels()),
     );
@@ -118,7 +118,7 @@ export class Linear {
   }
 
   async getMemberById(teamId: string, userId: string) {
-    const result = await linearCache.getOrSetUser(
+    const result = await linearCache.user.getOrSet(
       userId,
       this.client
         .team(teamId)

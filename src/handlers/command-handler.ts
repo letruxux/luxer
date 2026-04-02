@@ -268,7 +268,7 @@ export class CommandHandler {
         extra.config = config;
 
         if (command.requireAccountLinked) {
-          const userTeams = await linearCache.getOrSetUserTeams(
+          const userTeams = await linearCache.userTeams.getOrSet(
             msg.author.id,
             extra.userLinear!.getUserTeamIds(),
           );

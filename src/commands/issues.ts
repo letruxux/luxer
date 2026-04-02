@@ -25,17 +25,19 @@ async function getMoreIssueMetadata(
   { isSearchResult = false } = {},
 ): Promise<IssueMeta> {
   const issueFull = isSearchResult
-    ? await linearCache.getOrSetIssue(issue.id, linear.client.issue(issue.id))
+    ? await linearCache.issue.getOrSet(issue.id, linear.client.issue(issue.id))
     : await linear.client.issue(issue.id);
 
   const [labels, state, creator] = await Promise.all([
-    linearCache
-      .getOrSetLabels(issue.id, issueFull.labels())
+    linearCache.issueLabels
+      .getOrSet(issue.id, issueFull.labels())
       .then((e) => e.nodes.map((l) => l.name)),
     issue.state
-      ? linearCache.getOrSetState(issue.id, issue.state).then((e) => e.name)
+      ? linearCache.issueState.getOrSet(issue.id, issue.state).then((e) => e.name)
       : "(no state)",
-    issueFull.creator ? linearCache.getOrSetUser(issue.id, issueFull.creator) : undefined,
+    issueFull.creator
+      ? linearCache.user.getOrSet(issue.id, issueFull.creator)
+      : undefined,
   ]);
 
   return {

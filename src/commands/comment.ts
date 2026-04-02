@@ -1,4 +1,8 @@
-import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
+import {
+  CommandLinearError,
+  CommandUserError,
+  type Command,
+} from "@/handlers/command-handler";
 import { code, embedOf, hyperlink, parseArgsAndIssueId, textEmbedOf } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
@@ -19,7 +23,7 @@ export const comment = {
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 
-    const issue = await linearCache.getOrSetIssue(issueId, linear.client.issue(issueId));
+    const issue = await linearCache.issue.getOrSet(issueId, linear.client.issue(issueId));
     const hasCommentPermission = await msg.client.handlers.perms.can(
       msg.author,
       msg.guildId!,

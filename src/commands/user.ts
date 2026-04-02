@@ -24,7 +24,7 @@ export const user = {
     }
 
     const user = await new Linear(tokenRecord.linearToken).getViewer();
-    linearCache.invalidateUserTeams(user.id);
+    linearCache.userTeams.invalidate(user.id);
 
     const embed = new EmbedBuilder()
       .setDescription(code(user.email))

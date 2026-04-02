@@ -1,4 +1,8 @@
-import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
+import {
+  CommandLinearError,
+  CommandUserError,
+  type Command,
+} from "@/handlers/command-handler";
 import { code, dueToSeconds, embedOf, yargs } from "@/utils";
 import type { Options } from "yargs-parser";
 import z from "zod";
@@ -90,8 +94,8 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
     const { title, labels, state, description, due } = parseArgs(_rawArgs);
 
     const [validStates, validLabels] = await Promise.all([
-      linearCache.getOrSetTeamStates(teamId, linear.getStatesOfTeam(teamId)),
-      linearCache.getOrSetTeamLabels(teamId, linear.getLabelsOfTeam(teamId)),
+      linearCache.teamStates.getOrSet(teamId, linear.getStatesOfTeam(teamId)),
+      linearCache.teamLabels.getOrSet(teamId, linear.getLabelsOfTeam(teamId)),
     ]);
 
     const stateObj = validStates.find(
@@ -164,7 +168,7 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
 
     const finalIssue = await _issue!;
     const viewer = finalIssue.creatorId
-      ? await linearCache.getOrSetUser(finalIssue.creatorId, linear.client.viewer)
+      ? await linearCache.user.getOrSet(finalIssue.creatorId, linear.client.viewer)
       : undefined;
 
     await respMsg.edit({

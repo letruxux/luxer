@@ -72,12 +72,12 @@ export const label = {
     const subcommand = filteredArgs[0]?.toLowerCase();
     const subcommandArgs = filteredArgs.slice(1);
 
-    const teamLabels = await linearCache.getOrSetTeamLabels(
+    const teamLabels = await linearCache.teamLabels.getOrSet(
       teamId,
       linear.getLabelsOfTeam(teamId),
     );
 
-    const issue = await linearCache.getOrSetIssue(issueId, linear.client.issue(issueId));
+    const issue = await linearCache.issue.getOrSet(issueId, linear.client.issue(issueId));
     const currentLabelIds = issue?.labelIds ?? [];
     const currentLabels = teamLabels.filter((l) => currentLabelIds.includes(l.id));
     const prefix = await msg.client.handlers.command.getPrefix(msg);
@@ -129,7 +129,7 @@ export const label = {
     });
     if (!success) throw new CommandLinearError();
 
-    linearCache.invalidateLabels(issueId);
+    linearCache.issueLabels.invalidate(issueId);
 
     await msg.reply(
       embedOf(
