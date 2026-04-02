@@ -11,6 +11,7 @@ import { Permission } from "./permission-handler";
 import { code, embedOf, fixCasing } from "@/utils";
 import { Linear } from "@/lib/linear";
 import { linearCache } from "@/lib/linear-cache";
+import { eq } from "drizzle-orm";
 
 export interface CommandExtra {
   config?: GuildConfig;
@@ -216,7 +217,40 @@ export class CommandHandler {
         }
 
         extra.userToken = userToken;
-        extra.userLinear = new Linear(userToken.linearToken);
+
+        let token = userToken.linearToken;
+        if (
+          userToken.linearTokenExpiresAt &&
+          userToken.linearTokenExpiresAt.getTime() < Date.now()
+        ) {
+          if (!userToken.linearRefreshToken) {
+            await msg.reply(
+              this.buildErrorPayload(
+                "something went wrong with your credentials. Please run `l!login` again.",
+              ),
+            );
+            return true;
+          }
+
+          const tokens = await Linear.helpers.refreshLinearToken(
+            userToken.linearRefreshToken,
+          );
+
+          await db
+            .update(userTokens)
+            .set({
+              linearToken: tokens.access_token,
+              linearRefreshToken: tokens.refresh_token ?? userToken.linearRefreshToken,
+              linearTokenExpiresAt: tokens.expires_in
+                ? new Date(Date.now() + tokens.expires_in * 1000)
+                : null,
+            })
+            .where(eq(userTokens.userId, msg.author.id));
+
+          token = tokens.access_token;
+        }
+
+        extra.userLinear = new Linear(token);
       }
 
       if (command.requireConfig && msg.guild) {

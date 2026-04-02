@@ -6,16 +6,11 @@ import { REST, Routes } from "@fluxerjs/rest";
 import logger from "./lib/logger";
 import { EmbedBuilder } from "./utils/embed-builder";
 import { bold } from "./utils";
+import type { OAuthTokens } from "./lib/linear";
 
 export const authApp = new Hono();
 const fluxerRest = new REST();
 fluxerRest.setToken(env.FLUXER_TOKEN);
-
-interface OAuthTokens {
-  access_token: string;
-  expires_in?: number;
-  refresh_token?: string;
-}
 
 const oauthStates = new Map<string, { userId: string; codeVerifier: string }>();
 

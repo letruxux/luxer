@@ -1,5 +1,6 @@
 import { LinearClient } from "@linear/sdk";
 import { linearCache } from "./linear-cache";
+import { env } from "@/env";
 
 export interface LinearIssue {
   id: string;
@@ -29,6 +30,11 @@ export interface LinearUser {
   avatarUrl?: string;
 }
 
+export interface OAuthTokens {
+  access_token: string;
+  expires_in?: number;
+  refresh_token?: string;
+}
 class LinearHelpers {
   static getDayAgo = () => {
     const now = new Date();
@@ -49,6 +55,27 @@ class LinearHelpers {
 
     return counts;
   };
+
+  static async refreshLinearToken(refreshToken: string): Promise<OAuthTokens> {
+    const tokenResponse = await fetch("https://api.linear.app/oauth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: env.LINEAR_CLIENT_ID!,
+        client_secret: env.LINEAR_CLIENT_SECRET!,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error("Failed to refresh token");
+    }
+
+    return (await tokenResponse.json()) as OAuthTokens;
+  }
 }
 
 export class Linear {
