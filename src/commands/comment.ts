@@ -91,9 +91,11 @@ export const comment = {
       body,
     });
     if (!result) throw new CommandLinearError();
+    if (!result.comment) throw new CommandLinearError();
+
+    linearCache.issue.invalidate(issueId);
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
-    if (!result.comment) throw new CommandLinearError();
 
     const resultComment = await result.comment;
     const newComments = [...comments, resultComment].sort(
