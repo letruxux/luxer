@@ -18,8 +18,8 @@ export const comment = {
   requireAccountLinked: true,
   requireConfig: true,
   requirePerms: [Permission.COMMENT_ISSUE, Permission.READ_COMMENT],
-  async execute(msg, args, { userLinear }) {
-    const linear = userLinear!;
+  async execute(msg, args, extra) {
+    const linear = extra.userLinear!;
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 

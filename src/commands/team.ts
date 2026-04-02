@@ -8,9 +8,9 @@ export const team = {
   requireConfig: true,
   requireAccountLinked: true,
   guildOnly: true,
-  async execute(msg, _, { config, userLinear }) {
-    const linear = userLinear!;
-    const teamId = config!.teamId!;
+  async execute(msg, _, extra) {
+    const linear = extra.userLinear!;
+    const teamId = extra.config!.teamId!;
 
     const team = await linear.client.team(teamId);
     if (!team) {

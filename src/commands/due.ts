@@ -14,8 +14,8 @@ export const due = {
   requireAccountLinked: true,
   requireConfig: true,
   requirePerms: [Permission.UPDATE_ISSUE],
-  async execute(msg, args, { userLinear }) {
-    const linear = userLinear!;
+  async execute(msg, args, extra) {
+    const linear = extra.userLinear!;
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 

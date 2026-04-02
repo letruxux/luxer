@@ -15,9 +15,9 @@ export const state = {
   requireAccountLinked: true,
   requireConfig: true,
   requirePerms: [Permission.UPDATE_ISSUE],
-  async execute(msg, args, { userLinear, config }) {
-    const linear = userLinear!;
-    const teamId = config!.teamId!;
+  async execute(msg, args, extra) {
+    const linear = extra.userLinear!;
+    const teamId = extra.config!.teamId!;
 
     const { issueId, args: filteredArgs } = await parseArgsAndIssueId(msg, args);
 

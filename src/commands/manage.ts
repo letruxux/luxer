@@ -40,9 +40,9 @@ export const manage = {
   requireAccountLinked: true,
 
   aliases: [],
-  async execute(msg: Message, args: string[], { userLinear, config }) {
-    const linear = userLinear!;
-    const teamId = config!.teamId!;
+  async execute(msg: Message, args: string[], extra) {
+    const linear = extra.userLinear!;
+    const teamId = extra.config!.teamId!;
     const subcommand = args[0]?.toLowerCase();
 
     if (!subcommand || !["labels", "states"].includes(subcommand)) {

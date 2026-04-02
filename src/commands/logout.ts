@@ -10,7 +10,7 @@ export const logout = {
   name: "logout",
   description: "Logout from Linear",
   requireAccountLinked: true,
-  async execute(msg, _, {}) {
+  async execute(msg) {
     const respMsg = await msg.reply({
       embeds: [
         new EmbedBuilder()

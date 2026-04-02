@@ -12,7 +12,8 @@ export const setup = {
   guildOnly: true,
   adminOnly: true,
   requireAccountLinked: true,
-  async execute(msg, _, { userLinear }) {
+  async execute(msg, _, extra) {
+    const linear = extra.userLinear!;
     const guildId = msg.guild!.id;
     const channel = msg.channel as TextChannel;
 
@@ -27,7 +28,7 @@ export const setup = {
     let teams: { id: string; name: string }[];
 
     try {
-      const rawTeams = await userLinear!.getTeams();
+      const rawTeams = await linear.getTeams();
       teams = rawTeams.slice(0, 10).map((t) => ({ id: t.id, name: t.name }));
     } catch {
       throw new CommandUserError("Invalid API key");
