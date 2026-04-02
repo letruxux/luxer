@@ -1,5 +1,9 @@
-import { CommandLinearError, CommandUserError, type Command } from "@/handlers/command-handler";
-import { code, dueToSeconds, embedOf, parseArgsAndIssueId } from "@/utils";
+import {
+  CommandLinearError,
+  CommandUserError,
+  type Command,
+} from "@/handlers/command-handler";
+import { dueToSeconds, embedOf, parseArgsAndIssueId } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { Permission } from "@/handlers/permission-handler";
 
@@ -21,24 +25,30 @@ export const due = {
       throw new CommandUserError("No due date provided");
     }
 
-    const parsed = dueToSeconds(due);
+    const shouldClear = ["clear", "none", "never"].includes(due.toLowerCase());
 
-    if (!parsed) {
-      throw new CommandUserError("Invalid due date");
+    let dueDate: string | null = null;
+    if (!shouldClear) {
+      const parsed = dueToSeconds(due);
+      if (!parsed) {
+        throw new CommandUserError("Invalid due date");
+      }
+      dueDate = new Date(Date.now() + parsed * 1000).toISOString();
     }
 
-    const { success, issue } = await linear.client.updateIssue(issueId, {
-      dueDate: new Date(Date.now() + parsed * 1000).toISOString(),
-    });
+    const { success, issue } = await linear.client.updateIssue(issueId, { dueDate });
     if (!success) throw new CommandLinearError();
 
     const prefix = await msg.client.handlers.command.getPrefix(msg);
     const resultIssue = await issue!;
+    const dateStr = shouldClear
+      ? "cleared"
+      : `<t:${Math.floor(new Date(resultIssue.dueDate).getTime() / 1000)}:d>`;
     await msg.reply(
       embedOf(
         new EmbedBuilder()
           .setDescription(
-            `Due date updated to <t:${Math.floor(new Date(resultIssue.dueDate).getTime() / 1000)}:d>!\nRun \`${prefix}issue ${issue ? resultIssue.identifier : issueId}\` to view the updated issue`,
+            `Due date ${dateStr}!\nRun \`${prefix}issue ${resultIssue.identifier}\` to view the updated issue`,
           )
           .setColor(0x00ff00),
       ),

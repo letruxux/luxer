@@ -61,39 +61,81 @@ export function filterIdArg(args: string[]) {
 export function dueToSeconds(str: string): number | null {
   str = str.trim().toLowerCase();
 
+  const now = new Date();
+
+  if (str === "today") {
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return Math.floor((end.getTime() - now.getTime()) / 1000);
+  }
+
+  if (str === "tomorrow") {
+    const end = new Date(now);
+    end.setDate(end.getDate() + 1);
+    end.setHours(23, 59, 59, 999);
+    return Math.floor((end.getTime() - now.getTime()) / 1000);
+  }
+
   const units: Record<string, number> = {
     m: 60,
     min: 60,
     mins: 60,
-    h: 60 * 60,
-    hr: 60 * 60,
-    hrs: 60 * 60,
-    d: 24 * 60 * 60,
-    day: 24 * 60 * 60,
-    days: 24 * 60 * 60,
-    w: 7 * 24 * 60 * 60,
-    week: 7 * 24 * 60 * 60,
-    weeks: 7 * 24 * 60 * 60,
-    mo: 30 * 24 * 60 * 60,
-    month: 30 * 24 * 60 * 60,
-    months: 30 * 24 * 60 * 60,
-    y: 365 * 24 * 60 * 60,
-    year: 365 * 24 * 60 * 60,
-    years: 365 * 24 * 60 * 60,
-    yr: 365 * 24 * 60 * 60,
-    yrs: 365 * 24 * 60 * 60,
+    h: 3600,
+    hr: 3600,
+    hrs: 3600,
+    d: 86400,
+    day: 86400,
+    days: 86400,
+    w: 604800,
+    week: 604800,
+    weeks: 604800,
+    mo: 2592000,
+    month: 2592000,
+    months: 2592000,
+    y: 31536000,
+    year: 31536000,
+    years: 31536000,
+    yr: 31536000,
+    yrs: 31536000,
   };
 
   const match = str.match(/^(\d+)\s*(\w+)$/);
-  if (!match) return null;
+  if (match) {
+    const [, numStr, unit] = match;
+    const num = parseInt(numStr!, 10);
+    const u = unit!.replace(/s$/, "");
 
-  const [, numStr, unit] = match;
-  const num = parseInt(numStr!, 10);
-  const u = unit!.replace(/s$/, "");
+    if (!(u in units)) return null;
+    return num * units[u]!;
+  }
 
-  if (!(u in units)) return null;
+  let parsed: Date | null = null;
 
-  return num * units[u]!;
+  const us = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (us) {
+    const [, m, d, y] = us;
+    const month = Number(m);
+    const day = Number(d);
+    const year = Number(y);
+
+    if (month < 1 || month > 12) return null;
+    if (day < 1 || day > 31) return null;
+
+    parsed = new Date(year, month - 1, day);
+  } else {
+    const t = Date.parse(str);
+    if (!isNaN(t)) {
+      parsed = new Date(t);
+    }
+  }
+
+  if (parsed) {
+    const diff = parsed.getTime() - now.getTime();
+    if (diff <= 0) return null;
+    return Math.floor(diff / 1000);
+  }
+
+  return null;
 }
 
 export function isAll(perms: PermissionSet, value: boolean) {
