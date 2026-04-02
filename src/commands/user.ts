@@ -4,6 +4,7 @@ import { Linear } from "@/lib/linear";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { code } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
+import { linearCache } from "@/lib/linear-cache";
 
 export const user = {
   name: "user",
@@ -23,6 +24,7 @@ export const user = {
     }
 
     const user = await new Linear(tokenRecord.linearToken).getViewer();
+    linearCache.invalidateUserTeams(user.id);
 
     const embed = new EmbedBuilder()
       .setDescription(code(user.email))
