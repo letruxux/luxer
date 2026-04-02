@@ -40,14 +40,15 @@ class TimedCache<T> {
 
   invalidate(id: string) {
     this.cache.delete(id);
+    logger.dim(hexToTerminal("#2f9"), "- invalidated cache for", this.name);
   }
 
   async getOrSet(id: string, promise: Promise<T>): Promise<T> {
     const existing = await this.get(id);
-    logger.dim("! using cached item for", this.name);
+    logger.dim(hexToTerminal("#2f9"), "! using cached item for", this.name);
     if (existing) return existing;
 
-    logger.dim("X cache failed for", this.name);
+    logger.dim(hexToTerminal("#ff0000"), "X direct fetching for ", this.name);
     this.set(id, promise);
     return promise;
   }
