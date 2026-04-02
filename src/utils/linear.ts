@@ -79,7 +79,7 @@ export async function issueToEmbed(issue: {
 async function formatComment(comment: Comment) {
   const user =
     comment.userId && comment.user
-      ? await linearCache.getOrSetUser(comment.userId, comment.user)
+      ? await linearCache.user.getOrSet(comment.userId, comment.user)
       : undefined;
 
   return `${hyperlink(" 📎 ", comment.url)}${user?.name ?? "Unknown"}: ${removeNewlines(comment.body)} (${makeFluxerTimestamp(comment.createdAt, "R")})`;
