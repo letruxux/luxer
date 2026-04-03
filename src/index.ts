@@ -12,9 +12,7 @@ client.once("ready", async () => {
   logger.info(`${client.user?.username} ready!`);
 });
 
-client.on("messageCreate", async (msg) => {
-  await client.handlers.command.handleMessage(msg);
-});
+client.on("messageCreate", client.handlers.command.handleMessage);
 
 client.login(env.FLUXER_TOKEN!);
 
