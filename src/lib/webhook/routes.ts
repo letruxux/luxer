@@ -1,20 +1,60 @@
 import { Hono } from "hono";
+import {
+  LinearWebhookClient,
+  LINEAR_WEBHOOK_SIGNATURE_HEADER,
+  LINEAR_WEBHOOK_TS_FIELD,
+  type EntityWebhookPayloadWithEntityData,
+} from "@linear/sdk/webhooks";
 import { createDiscordMessage } from "./message";
-import logger from "../logger";
+import { hexToTerminal, Logger } from "../logger";
+import { env } from "@/env";
 
-const webhookRoutes = new Hono();
+const logger = new Logger(
+  `${hexToTerminal("#2ff")}[webhooks]${Logger.resetColor}`,
+  "#fff",
+);
 
-webhookRoutes.post("/", async (c) => {
-  try {
-    const linearData = await c.req.json();
-    logger.dim("Received webhook from Linear:", JSON.stringify(linearData, null, 2));
+function makeWebhookRoutes() {
+  if (!env.LINEAR_WEBHOOK_SECRET) {
+    logger.info("LINEAR_WEBHOOK_SECRET not set, disabling webhooks");
+    return null;
+  }
 
-    const discordMessage = createDiscordMessage(linearData);
+  const webhookClient = new LinearWebhookClient(env.LINEAR_WEBHOOK_SECRET);
+
+  const webhookRoutes = new Hono();
+
+  webhookRoutes.post("/", async (c) => {
+    try {
+      const signature = c.req.header(LINEAR_WEBHOOK_SIGNATURE_HEADER);
+      const rawBody = await c.req.text();
+      const body = JSON.parse(rawBody);
+      const timestamp = body[LINEAR_WEBHOOK_TS_FIELD];
+
+      if (!webhookClient.verify(rawBody as any, signature ?? "", timestamp)) {
+        logger.error("Invalid webhook signature");
+        return c.json({ error: "Invalid signature" }, 401);
+      }
+
+      logger.dim(`Received ${body.type} event:`, JSON.stringify(body, null, 2));
+
+      const discordMessage = createDiscordMessage(body as EntityWebhookPayloadWithEntityData);
+
+      await sendToDiscord(discordMessage);
+
+      return c.json({ status: "success" });
+    } catch (error) {
+      logger.error("Error processing webhook:", error);
+      return c.json({ error: "Failed to process webhook" }, 500);
+    }
+  });
+
+  async function sendToDiscord(message: ReturnType<typeof createDiscordMessage>) {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
     if (!webhookUrl) {
       logger.error("DISCORD_WEBHOOK_URL not set");
-      return c.json({ error: "Discord webhook URL not configured" }, 500);
+      return;
     }
 
     const response = await fetch(webhookUrl, {
@@ -22,20 +62,16 @@ webhookRoutes.post("/", async (c) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(discordMessage),
+      body: JSON.stringify(message),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       logger.error("Discord webhook failed:", errorText);
-      throw new Error(`Discord webhook failed: ${response.statusText}`);
     }
-
-    return c.json({ status: "success" });
-  } catch (error) {
-    logger.error("Error processing webhook:", error);
-    return c.json({ error: "Failed to process webhook" }, 500);
   }
-});
 
-export default webhookRoutes;
+  return webhookRoutes;
+}
+
+export default makeWebhookRoutes;

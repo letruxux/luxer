@@ -9,6 +9,7 @@ export const env = createEnv({
     LINEAR_CLIENT_ID: z.string().min(1),
     LINEAR_CLIENT_SECRET: z.string().min(1),
     LINEAR_REDIRECT_URI: z.url(),
+    LINEAR_WEBHOOK_SECRET: z.string().optional(),
   },
 
   runtimeEnv: process.env,

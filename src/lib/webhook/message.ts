@@ -1,77 +1,26 @@
+import type {
+  EntityWebhookPayloadWithIssueData,
+  EntityWebhookPayloadWithCommentData,
+  EntityWebhookPayloadWithEntityData,
+} from "@linear/sdk/webhooks";
+import { EmbedBuilder } from "@/utils/embed-builder";
 import { getPriorityEmoji, getStatusColor, getTimestampString } from "./utils";
 
-interface LinearActor {
-  name: string;
-}
+type LinearIssueData = EntityWebhookPayloadWithIssueData["data"];
+type LinearCommentData = EntityWebhookPayloadWithCommentData["data"];
+type LinearActor = EntityWebhookPayloadWithIssueData["actor"];
 
-interface LinearTeam {
-  key: string;
-  name: string;
-}
-
-interface LinearState {
-  name: string;
-}
-
-interface LinearLabel {
-  name: string;
-}
-
-interface LinearAssignee {
-  name: string;
-}
-
-interface LinearIssueData {
-  team?: LinearTeam;
-  number: number;
-  title: string;
-  state?: LinearState;
-  priority: number;
-  assignee?: LinearAssignee;
-  labels?: LinearLabel[];
-  updatedAt?: string;
-  createdAt?: string;
-  url?: string;
-}
-
-interface LinearCommentIssue {
-  identifier: string;
-}
-
-interface LinearCommentData {
-  issue: LinearCommentIssue;
-  user: { name: string };
-  createdAt: string;
-}
-
-interface LinearData {
-  action: string;
-  actor?: LinearActor;
-  data: LinearIssueData | LinearCommentData;
-  type: string;
+function getActorName(actor: LinearActor): string {
+  if (!actor) return "Unknown";
+  if (actor.__typename === "UserActorWebhookPayload") {
+    return actor.name;
+  }
+  return "Unknown";
 }
 
 export interface DiscordMessage {
   content?: string;
-  embeds: DiscordEmbed[];
-}
-
-export interface DiscordEmbed {
-  title?: string;
-  url?: string;
-  description?: string;
-  color?: number;
-  fields?: DiscordField[];
-  footer?: {
-    text: string;
-  };
-  timestamp?: string;
-}
-
-export interface DiscordField {
-  name: string;
-  value: string;
-  inline?: boolean;
+  embeds: ReturnType<EmbedBuilder["toJSON"]>[];
 }
 
 function handleIssueUpdate({
@@ -80,7 +29,7 @@ function handleIssueUpdate({
   data,
 }: {
   action: string;
-  actor?: LinearActor;
+  actor?: EntityWebhookPayloadWithIssueData["actor"];
   data: LinearIssueData;
 }): DiscordMessage {
   const issueName = `${data.team?.key}-${data.number}`;
@@ -94,15 +43,24 @@ function handleIssueUpdate({
     remove: { emoji: "🗑️", description: `Issue deleted ${timestamp}` },
   };
 
-  const actionFormat =
-    ACTION_FORMATS[action] || {
-      emoji: "ℹ️",
-      description: `Issue ${action} ${timestamp}`,
-    };
+  const actionFormat = ACTION_FORMATS[action] || {
+    emoji: "ℹ️",
+    description: `Issue ${action} ${timestamp}`,
+  };
 
-  const content = `${data.state?.name === "Done" ? "✅" : ""} **${actor?.name ?? "Someone"}** changed issue status to **${data.state?.name}** in [${data.team?.name ?? "Unknown"} Team](${data.url ?? issueUrl})`;
+  const content = `${data.state?.name === "Done" ? "✅" : ""} **${getActorName(actor)}** changed issue status to **${data.state?.name}** in [${data.team?.name ?? "Unknown"} Team](${data.url ?? issueUrl})`;
 
-  const fields: DiscordField[] = [
+  const embed = new EmbedBuilder()
+    .setTitle(`${actionFormat.emoji} ${issueName}: ${data.title}`)
+    .setURL(issueUrl)
+    .setDescription(actionFormat.description)
+    .setColor(getStatusColor(data.state?.name))
+    .setTimestamp(new Date(data.updatedAt ?? data.createdAt ?? ""))
+    .setFooter({
+      text: `${data.team?.name ?? "Unknown Team"} • ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+    });
+
+  const fields: { name: string; value: string; inline?: boolean }[] = [
     {
       name: "Status",
       value: data.state?.name ?? "No status",
@@ -128,41 +86,25 @@ function handleIssueUpdate({
     });
   }
 
+  embed.addFields(...fields);
+
   return {
     content,
-    embeds: [
-      {
-        title: `${actionFormat.emoji} ${issueName}: ${data.title}`,
-        url: issueUrl,
-        description: actionFormat.description,
-        color: getStatusColor(data.state?.name),
-        fields,
-        footer: {
-          text: `${data.team?.name ?? "Unknown Team"} • ${action.charAt(0).toUpperCase() + action.slice(1)}`,
-        },
-        timestamp: new Date(data.updatedAt ?? data.createdAt ?? "").toISOString(),
-      },
-    ],
+    embeds: [embed.toJSON()],
   };
 }
 
-function handleCommentUpdate({
-  data,
-}: {
-  data: LinearCommentData;
-}): DiscordMessage {
+function handleCommentUpdate({ data }: { data: LinearCommentData }): DiscordMessage {
+  const embed = new EmbedBuilder()
+    .setTitle(`💬 New comment on ${data.issue?.identifier}`)
+    .setURL(`https://linear.app/issue/${data.issue?.identifier}`)
+    .setTimestamp(new Date(data.createdAt))
+    .setFooter({
+      text: `Comment by ${data.user?.name ?? "Unknown"}`,
+    });
+
   return {
-    embeds: [
-      {
-        title: `💬 New comment on ${data.issue.identifier}`,
-        url: `https://linear.app/issue/${data.issue.identifier}`,
-        color: 0x5e6ad2,
-        footer: {
-          text: `Comment by ${data.user.name}`,
-        },
-        timestamp: new Date(data.createdAt).toISOString(),
-      },
-    ],
+    embeds: [embed.toJSON()],
   };
 }
 
@@ -173,23 +115,34 @@ function handleDefaultUpdate({
   action: string;
   type: string;
 }): DiscordMessage {
+  const embed = new EmbedBuilder()
+    .setTitle(`Linear Update: ${type}`)
+    .setDescription(`A ${type} was ${action}ed`);
+
   return {
-    embeds: [
-      {
-        title: `Linear Update: ${type}`,
-        description: `A ${type} was ${action}ed`,
-        color: 0x5e6ad2,
-      },
-    ],
+    embeds: [embed.toJSON()],
   };
 }
 
-export function createDiscordMessage(linearData: LinearData): DiscordMessage {
+type IssuePayload = EntityWebhookPayloadWithIssueData;
+type CommentPayload = EntityWebhookPayloadWithCommentData;
+type WebhookPayload = EntityWebhookPayloadWithEntityData;
+
+export function createDiscordMessage(linearData: WebhookPayload): DiscordMessage {
   const { action, actor, data, type } = linearData;
 
-  const handlers: Record<string, (params: { action: string; actor?: LinearActor; data: LinearData["data"]; type: string }) => DiscordMessage> = {
-    Issue: ({ action, actor, data }) => handleIssueUpdate({ action, actor, data: data as LinearIssueData }),
-    Comment: ({ data }) => handleCommentUpdate({ data: data as LinearCommentData }),
+  const handlers: Record<
+    string,
+    (params: {
+      action: string;
+      actor?: LinearActor;
+      data: unknown;
+      type: string;
+    }) => DiscordMessage
+  > = {
+    Issue: ({ action, actor, data }) =>
+      handleIssueUpdate({ action, actor, data: data as IssuePayload["data"] }),
+    Comment: ({ data }) => handleCommentUpdate({ data: data as CommentPayload["data"] }),
     default: ({ action, type }) => handleDefaultUpdate({ action, type }),
   };
 
