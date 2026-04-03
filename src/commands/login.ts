@@ -1,16 +1,14 @@
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { generateAuthUrlForUser } from "@/lib/oauth";
 import { bold, embedOf } from "@/utils";
-import { db } from "@/db";
+import { getTokenOfUser } from "@/db";
 import { EmbedBuilder } from "@/utils/embed-builder";
 
 export const login = {
   name: "login",
   description: "Login to Linear",
   async execute(msg) {
-    const userToken = await db.query.userTokens.findFirst({
-      where: (tbl, { eq }) => eq(tbl.userId, msg.author.id),
-    });
+    const userToken = await getTokenOfUser(msg.author.id);
     if (userToken) {
       throw new CommandUserError("You're already logged in!");
     }

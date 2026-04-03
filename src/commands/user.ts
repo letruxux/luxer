@@ -1,5 +1,4 @@
-import { Message } from "@fluxerjs/core";
-import { db } from "@/db";
+import { getTokenOfUser } from "@/db";
 import { Linear } from "@/lib/linear";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
 import { code } from "@/utils";
@@ -13,9 +12,7 @@ export const user = {
   async execute(msg) {
     const idToCheck = msg.mentions[0]?.id ?? msg.author.id;
 
-    const tokenRecord = await db.query.userTokens.findFirst({
-      where: (tbl, { eq }) => eq(tbl.userId, idToCheck),
-    });
+    const tokenRecord = await getTokenOfUser(idToCheck);
 
     if (!tokenRecord && msg.mentions[0]?.id) {
       throw new CommandUserError("That user isn't linked to an account.");
@@ -23,7 +20,7 @@ export const user = {
       throw new CommandUserError("Not logged in");
     }
 
-    const user = await new Linear(tokenRecord.linearToken).getViewer();
+    const user = await new Linear(tokenRecord).getViewer();
     linearCache.userTeams.invalidate(user.id);
 
     const embed = new EmbedBuilder()
