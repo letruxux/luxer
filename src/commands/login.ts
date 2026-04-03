@@ -1,11 +1,5 @@
-import { nanoid } from "nanoid";
-import { env } from "@/env";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import {
-  generateCodeVerifier,
-  generateCodeChallenge,
-  addStateLogin,
-} from "@/lib/auth-routes";
+import { generateAuthUrlForUser } from "@/lib/oauth";
 import { bold, embedOf } from "@/utils";
 import { db } from "@/db";
 import { EmbedBuilder } from "@/utils/embed-builder";
@@ -23,23 +17,7 @@ export const login = {
 
     const user = msg.author;
 
-    const codeVerifier = await generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const state = nanoid(24);
-
-    addStateLogin(state, {
-      userId: user.id,
-      codeVerifier,
-    });
-
-    const authUrl = new URL("https://linear.app/oauth/authorize");
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("client_id", env.LINEAR_CLIENT_ID!);
-    authUrl.searchParams.set("redirect_uri", env.LINEAR_REDIRECT_URI!);
-    authUrl.searchParams.set("scope", "read,write");
-    authUrl.searchParams.set("state", state);
-    authUrl.searchParams.set("code_challenge", codeChallenge);
-    authUrl.searchParams.set("code_challenge_method", "S256");
+    const authUrl = await generateAuthUrlForUser(user.id);
 
     await user.send(
       embedOf(

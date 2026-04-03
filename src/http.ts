@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import authRoutes from "./lib/auth-routes";
+import authRoutes from "./lib/oauth";
 import webhookRoutes from "./lib/webhook/routes";
 
 export default function makeHTTP() {
