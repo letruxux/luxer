@@ -26,7 +26,7 @@ export default class TextInputHandler {
     const list = this.waitingForMessages.get(message.channelId);
     if (!list || list.length === 0) return;
 
-    for (const waiting of [...list]) {
+    for (const waiting of list) {
       if (waiting.allowedUserId === message.author.id) {
         waiting.resolve(message);
         this.cleanupMessage(message.channelId, waiting.id);

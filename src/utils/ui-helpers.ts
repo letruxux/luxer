@@ -1,5 +1,6 @@
 import type { Message } from "@fluxerjs/core";
 import { textEmbedOf } from "@/utils";
+import { EMOJIS, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 
 const INTERACTION_TIMEOUT = 120_000;
 
@@ -14,8 +15,6 @@ export async function confirmAction(
   msgResp: Message,
   question: string,
 ): Promise<boolean> {
-  const { YES_EMOJI, YES_NO_EMOJIS } = await import("@/handlers/reaction-handler");
-
   await msgResp.edit({
     embeds: [
       new (await import("@/utils/embed-builder")).EmbedBuilder()
@@ -31,7 +30,7 @@ export async function confirmAction(
     timeout: INTERACTION_TIMEOUT,
   });
 
-  if (!confirmResp || confirmResp.emoji.name !== YES_EMOJI) {
+  if (!confirmResp || confirmResp.emoji.name !== EMOJIS.YES) {
     return false;
   }
 

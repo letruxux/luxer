@@ -7,9 +7,8 @@ import {
   waitForTextInput,
   normalizeCancel,
 } from "@/utils/ui-helpers";
-import { NUMBER_EMOJIS } from "@/handlers/reaction-handler";
+import { EMOJIS, NUMBER_EMOJIS } from "@/handlers/reaction-handler";
 
-const ADD_EMOJI = "➕";
 const INTERACTION_TIMEOUT = 120_000;
 
 export interface TeamEntity {
@@ -45,7 +44,7 @@ export async function showEntityList<T extends TeamEntity>({
     ? entities.map((e, i) => `${emojiList[i]} ${renderItem(e, i)}`).join("\n")
     : `No ${entityName}s`;
 
-  const allEmojis = onAdd ? [...emojiList, ADD_EMOJI] : emojiList;
+  const allEmojis = onAdd ? [...emojiList, EMOJIS.NEW] : emojiList;
 
   const msgResp = await msg.reply(
     embedOf(
@@ -54,7 +53,7 @@ export async function showEntityList<T extends TeamEntity>({
         .setDescription(listText)
         .addFields({
           name: "Actions",
-          value: onAdd ? `${ADD_EMOJI} Add` : "None",
+          value: onAdd ? `${EMOJIS.NEW} Add` : "None",
         })
         .setColor(0x00ff00),
     ),
@@ -74,7 +73,7 @@ export async function showEntityList<T extends TeamEntity>({
   const emojiName = resp.emoji.name;
   await msgResp.removeAllReactions();
 
-  if (onAdd && emojiName === ADD_EMOJI) {
+  if (onAdd && emojiName === EMOJIS.NEW) {
     const newName = await waitForTextInput(msg, msgResp, `Add ${entityName}`);
     if (!newName || normalizeCancel(newName)) {
       const refreshed = await refreshEntities();

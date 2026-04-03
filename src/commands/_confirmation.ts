@@ -1,8 +1,7 @@
 import type { Message } from "@fluxerjs/core";
-import { YES_EMOJI, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
+import { EMOJIS, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 import { embedOf } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
-
 
 export async function askConfirmation({
   msg,
@@ -45,7 +44,7 @@ export async function askConfirmation({
 
   const confirmed = customEmojis
     ? resp.emoji.name === customEmojis[0]
-    : resp.emoji.name === YES_EMOJI;
+    : resp.emoji.name === EMOJIS.YES;
 
   if (!confirmed) {
     await respMsg.edit({

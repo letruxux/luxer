@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { guildConfigs, userTokens } from "@/db/schema";
 import logger from "@/lib/logger";
 import { EmbedBuilder } from "@/utils/embed-builder";
-import { code, embedOf } from "@/utils";
+import { embedOf } from "@/utils";
 import { Linear } from "@/lib/linear";
 import { linearCache } from "@/lib/linear-cache";
 import { eq } from "drizzle-orm";

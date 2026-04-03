@@ -4,10 +4,7 @@ import { Linear } from "@/lib/linear";
 import { linearCache } from "@/lib/linear-cache";
 import { textEmbedOf } from "@/utils";
 import { showEntityList, showEntityOptions, handleRenameEntity } from "./shared";
-
-const RENAME_EMOJI = "✏️";
-const ARCHIVE_EMOJI = "📦";
-const BACK_EMOJI = "↩️";
+import { EMOJIS, YES_NO_EMOJIS } from "@/handlers/reaction-handler";
 
 const STATE_TYPES = [
   { type: "unstarted", label: "Unstarted", emoji: "⚪" },
@@ -17,9 +14,9 @@ const STATE_TYPES = [
 ] as const;
 
 const STATE_OPTIONS = [
-  { emoji: ARCHIVE_EMOJI, action: "Archive" },
-  { emoji: RENAME_EMOJI, action: "Rename" },
-  { emoji: BACK_EMOJI, action: "Back" },
+  { emoji: EMOJIS.ARCHIVE, action: "Archive" },
+  { emoji: EMOJIS.RENAME, action: "Rename" },
+  { emoji: EMOJIS.BACK, action: "Back" },
 ];
 
 async function getStatesIgnoreCache(
@@ -30,7 +27,7 @@ async function getStatesIgnoreCache(
   return await linear.getStatesOfTeam(teamId);
 }
 
-function renderState(state: WorkflowState, index: number): string {
+function renderState(state: WorkflowState): string {
   const icon =
     state.type === "started"
       ? "🟢"
@@ -174,7 +171,7 @@ async function showStateOptions(
       new (await import("@/utils/embed-builder")).EmbedBuilder()
         .setTitle(`State: ${selectedState.name}`)
         .setDescription(
-          `${ARCHIVE_EMOJI} Archive | ${RENAME_EMOJI} Rename | ${BACK_EMOJI} Back`,
+          `${EMOJIS.ARCHIVE} Archive | ${EMOJIS.RENAME} Rename | ${EMOJIS.BACK} Back`,
         )
         .setColor(0x00ff00),
     ],
@@ -188,7 +185,7 @@ async function showStateOptions(
     entityName: "state",
     options: STATE_OPTIONS,
     onSelect: async (emoji) => {
-      if (emoji === ARCHIVE_EMOJI) {
+      if (emoji === EMOJIS.ARCHIVE) {
         const confirmed = await confirmArchive(msg, msgResp, selectedState.name);
         if (!confirmed) {
           const refreshed = await getStatesIgnoreCache(linear, teamId);
@@ -209,7 +206,7 @@ async function showStateOptions(
         return;
       }
 
-      if (emoji === RENAME_EMOJI) {
+      if (emoji === EMOJIS.RENAME) {
         const refreshed = await handleRenameEntity(
           msg,
           msgResp,
@@ -241,9 +238,6 @@ async function confirmArchive(
   msgResp: Message,
   stateName: string,
 ): Promise<boolean> {
-  const { YES_EMOJI, YES_NO_EMOJIS } = await import("@/handlers/reaction-handler");
-  const { handleTimeout } = await import("@/utils/ui-helpers");
-
   await msgResp.edit({
     embeds: [
       new (await import("@/utils/embed-builder")).EmbedBuilder()
@@ -259,7 +253,7 @@ async function confirmArchive(
     timeout: 120_000,
   });
 
-  if (!confirmResp || confirmResp.emoji.name !== YES_EMOJI) {
+  if (!confirmResp || confirmResp.emoji.name !== EMOJIS.YES) {
     await msgResp.removeAllReactions();
     return false;
   }

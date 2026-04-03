@@ -9,15 +9,12 @@ import {
   handleDeleteEntity,
   handleRenameEntity,
 } from "./shared";
-
-const RENAME_EMOJI = "✏️";
-const DELETE_EMOJI = "🗑️";
-const BACK_EMOJI = "↩️";
+import { EMOJIS } from "@/handlers/reaction-handler";
 
 const LABEL_OPTIONS = [
-  { emoji: RENAME_EMOJI, action: "Rename" },
-  { emoji: DELETE_EMOJI, action: "Delete" },
-  { emoji: BACK_EMOJI, action: "Back" },
+  { emoji: EMOJIS.RENAME, action: "Rename" },
+  { emoji: EMOJIS.DELETE, action: "Delete" },
+  { emoji: EMOJIS.BACK, action: "Back" },
 ];
 
 async function getLabelsIgnoreCache(
@@ -115,7 +112,7 @@ async function showLabelOptions(
       new (await import("@/utils/embed-builder")).EmbedBuilder()
         .setTitle(`Label: ${selectedLabel.name}`)
         .setDescription(
-          `${RENAME_EMOJI} Rename | ${DELETE_EMOJI} Delete | ${BACK_EMOJI} Back`,
+          `${EMOJIS.RENAME} Rename | ${EMOJIS.DELETE} Delete | ${EMOJIS.BACK} Back`,
         )
         .setColor(0x00ff00),
     ],
@@ -129,7 +126,7 @@ async function showLabelOptions(
     entityName: "label",
     options: LABEL_OPTIONS,
     onSelect: async (emoji) => {
-      if (emoji === DELETE_EMOJI) {
+      if (emoji === EMOJIS.DELETE) {
         const refreshed = await handleDeleteEntity(
           msg,
           msgResp,
@@ -147,7 +144,7 @@ async function showLabelOptions(
         return;
       }
 
-      if (emoji === RENAME_EMOJI) {
+      if (emoji === EMOJIS.RENAME) {
         const refreshed = await handleRenameEntity(
           msg,
           msgResp,
@@ -167,7 +164,7 @@ async function showLabelOptions(
         }
       }
     },
-    onBack: async (labels) => {
+    onBack: async () => {
       const refreshed = await getLabelsIgnoreCache(linear, teamId);
       await showLabelsList(msg, linear, teamId, refreshed);
     },

@@ -4,11 +4,18 @@ import {
   type Message,
   type MessageReaction,
 } from "@fluxerjs/core";
-import logger from "@/lib/logger";
 
-export const YES_EMOJI = "✅";
-export const NO_EMOJI = "❌";
-export const YES_NO_EMOJIS = [YES_EMOJI, NO_EMOJI];
+export const EMOJIS = {
+  YES: "✅",
+  NO: "❌",
+  RENAME: "✏️",
+  DELETE: "🗑️",
+  BACK: "↩️",
+  NEW: "➕",
+  ARCHIVE: "🗃️",
+};
+
+export const YES_NO_EMOJIS = [EMOJIS.YES, EMOJIS.NO];
 export const NUMBER_EMOJIS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 
 export interface MessageWaitingForReaction {
@@ -44,7 +51,7 @@ export default class ReactionHandler {
     const userId = reaction._data.user_id;
     const emojiName = reaction.emoji.name ?? "";
 
-    for (const waiting of [...list]) {
+    for (const waiting of list) {
       const isAllowedUser = waiting.allowedUserIds.includes(userId);
       const isAllowedEmoji = waiting.allowedEmojis.includes(emojiName);
 
@@ -82,26 +89,6 @@ export default class ReactionHandler {
     }
   }
 
-  /**```ts
-const msg = ...;
-const resp = await client.handlers.reaction.wait(message, {
-  allowedUserIds: [interaction.user.id],
-  allowedEmojis: ["👍", "👎"],
-  timeout: 15000,
-});
-
-if (!reaction) {
-  await msg.reply("too slow");
-  return;
-}
-
-if (reaction.emoji.name === "👍") {
-  await msg.reply("ok");
-} else {
-  await msg.reply("no");
-}
-```
-   */
   wait(
     message: Message,
     data: Omit<
