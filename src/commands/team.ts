@@ -17,8 +17,10 @@ export const team = {
       throw new Error("Team not found");
     }
 
-    const states = await linear.getStatesOfTeam(teamId);
-    const labels = await linear.getLabelsOfTeam(teamId);
+    const [states, labels] = await Promise.all([
+      linear.getStatesOfTeam(teamId),
+      linear.getLabelsOfTeam(teamId),
+    ]);
 
     const teamInfo = [
       `**Key:** ${code(team.key ?? "(none)")}`,
