@@ -1,6 +1,6 @@
 /* modified, grabbed from flux.fm */
 
-import { PermissionFlags, type Client, type Message, type User } from "@fluxerjs/core";
+import { Client, PermissionFlags, type Message, type User } from "@fluxerjs/core";
 import { FluxerAPIError, HTTPError } from "@fluxerjs/rest";
 import { parseArgs } from "string-args-parser";
 import { db } from "@/db";
@@ -129,10 +129,6 @@ export class CommandHandler {
   }
 
   async handleMessage(msg: Message): Promise<boolean> {
-    if (!this.acceptMessage) {
-      logger.error("THAT WEIRD BUG AGAIN, this.acceptMessage is UNDEFINED");
-      return false;
-    }
     const isMsgOk = this.acceptMessage(msg.author);
     if (!isMsgOk) {
       return false;
