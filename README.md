@@ -48,3 +48,5 @@ Then, copy the Client ID and Client Secret. You'll need to set them as the envir
 ## Notes
 
 - User tokens are stored in plain text in the database.
+- Make sure to insert the database file in a volume to make sure it doesn't reset.
+- You need to open port 8288 to the internet, users will use it to login.
