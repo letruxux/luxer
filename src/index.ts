@@ -9,7 +9,7 @@ const http = makeHTTP();
 const client = makeBotClient();
 
 client.once("ready", async () => {
-  logger.info(`${client.user?.username} ready!`);
+  logger.info(`${client.user?.username}#${client.user?.discriminator} is ready!`);
 });
 
 client.on("messageCreate", client.handlers.command.handleMessage);
