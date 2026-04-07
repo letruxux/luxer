@@ -83,12 +83,12 @@ export class CommandHandler {
   }
 
   /* helpers */
-  acceptMessage(msg: User): boolean {
-    if (msg.bot) {
+  acceptMessage(user: User): boolean {
+    if (user.bot) {
       return false;
     }
 
-    if (this.userCommandsWorking.has(msg.id)) {
+    if (this.userCommandsWorking.has(user.id)) {
       return false;
     }
 
@@ -129,7 +129,12 @@ export class CommandHandler {
   }
 
   async handleMessage(msg: Message): Promise<boolean> {
-    if (!this.acceptMessage(msg.author)) {
+    if (!this.acceptMessage) {
+      logger.error("THAT WEIRD BUG AGAIN, this.acceptMessage is UNDEFINED");
+      return false;
+    }
+    const isMsgOk = this.acceptMessage(msg.author);
+    if (!isMsgOk) {
       return false;
     }
 
