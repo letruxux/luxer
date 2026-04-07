@@ -1,4 +1,4 @@
-# Lean 🍇 (temp name lol)
+# Luxer
 
 Linear for Fluxer
 
