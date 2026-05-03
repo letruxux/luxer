@@ -10,6 +10,7 @@ import { issueToEmbed } from "@/utils/linear";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { linearCache } from "@/lib/linear-cache";
 import { askConfirmation } from "./_confirmation";
+import { Linear } from "@/lib/linear";
 
 function parseArgs(rawArgs: string[]) {
   const argsOpt: Options = {
@@ -168,7 +169,9 @@ ${prefix + 'new --title "My issue" --labels bug,feature --state backlog --descri
           url: finalIssue.url,
           createdAt: finalIssue.createdAt,
           creatorPicture: viewer?.avatarUrl || undefined,
-          creatorName: viewer?.name || msg.author.username,
+          creatorName: viewer
+            ? Linear.helpers.userToStringNonEmail(viewer)
+            : msg.author.username,
           identifier: finalIssue.identifier,
           updatedAt: finalIssue.updatedAt,
         }),

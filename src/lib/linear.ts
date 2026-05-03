@@ -1,6 +1,7 @@
 import { LinearClient, type Team, type Comment, type User } from "@linear/sdk";
 import { linearCache } from "./linear-cache";
 import { env } from "@/env";
+import { firstNonEmail } from "@/utils";
 
 export interface OAuthTokens {
   access_token: string;
@@ -33,6 +34,10 @@ class LinearHelpers {
     }
 
     return (await tokenResponse.json()) as OAuthTokens;
+  }
+
+  static userToStringNonEmail(user: User) {
+    return firstNonEmail(user.name, user.displayName, user.email);
   }
 }
 

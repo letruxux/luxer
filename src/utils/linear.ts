@@ -2,6 +2,7 @@ import type { Comment } from "@linear/sdk";
 import { bold, hyperlink, makeFluxerTimestamp, removeNewlines } from ".";
 import { EmbedBuilder } from "./embed-builder";
 import { linearCache } from "@/lib/linear-cache";
+import { Linear } from "@/lib/linear";
 
 const MAX_DESCRIPTION_LENGTH = 1900;
 const MAX_COMMENTS = 3;
@@ -82,7 +83,7 @@ async function formatComment(comment: Comment) {
       ? await linearCache.user.getOrSet(comment.userId, comment.user)
       : undefined;
 
-  return `${hyperlink(" 📎 ", comment.url)}${user?.name ?? "Unknown"}: ${removeNewlines(comment.body)} (${makeFluxerTimestamp(comment.createdAt, "R")})`;
+  return `${hyperlink(" 📎 ", comment.url)}${user ? Linear.helpers.userToStringNonEmail(user) : "Unknown"}: ${removeNewlines(comment.body)} (${makeFluxerTimestamp(comment.createdAt, "R")})`;
 }
 
 export function isLinearIdentifier(str: string) {

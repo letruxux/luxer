@@ -19,6 +19,17 @@ export function quote(str: string) {
   return `"${str}"`;
 }
 
+export function isEmail(str: string) {
+  return str.includes("@");
+}
+
+export function firstNonEmail(...strs: string[]) {
+  for (const str of strs) {
+    if (!isEmail(str)) return str;
+  }
+  return (strs[0] ?? "").split("@")[0] || "";
+}
+
 function capFirst(str: string): string {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);

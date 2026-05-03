@@ -4,7 +4,7 @@ import { isLinearIdentifier, issueToEmbed } from "@/utils/linear";
 import { PaginationOrderBy } from "@linear/sdk";
 import { linearCache } from "@/lib/linear-cache";
 import type { Message } from "@fluxerjs/core";
-import type { Linear } from "@/lib/linear";
+import { Linear } from "@/lib/linear";
 import type { Issue, IssueSearchResult, Comment } from "@linear/sdk";
 import { db } from "@/db";
 import { issueIdsMessages } from "@/db/schema";
@@ -42,7 +42,7 @@ async function getMoreIssueMetadata(
   return {
     labels,
     state,
-    creatorName: creator?.name,
+    creatorName: creator ? Linear.helpers.userToStringNonEmail(creator) : undefined,
     creatorPicture: creator?.avatarUrl,
   };
 }

@@ -9,6 +9,7 @@ import { linearCache } from "@/lib/linear-cache";
 import { buildIssueEmbed } from "./issues";
 import { buildCommentsPart } from "@/utils/linear";
 import { askConfirmation } from "./_confirmation";
+import { Linear } from "@/lib/linear";
 
 export const comment = {
   name: "comment",
@@ -51,7 +52,7 @@ export const comment = {
       .setTitle(`Re: [${issue.identifier}] ${issue.title}`)
       .setDescription(body)
       .setAuthor({
-        name: viewer.name,
+        name: Linear.helpers.userToStringNonEmail(viewer),
         iconURL: viewer.avatarUrl ?? undefined,
         url: viewer.url,
       })

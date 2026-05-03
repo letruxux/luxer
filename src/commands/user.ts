@@ -1,7 +1,6 @@
 import { getTokenOfUser } from "@/db";
 import { Linear } from "@/lib/linear";
 import { CommandUserError, type Command } from "@/handlers/command-handler";
-import { code } from "@/utils";
 import { EmbedBuilder } from "@/utils/embed-builder";
 import { linearCache } from "@/lib/linear-cache";
 
@@ -24,11 +23,10 @@ export const user = {
     linearCache.userTeams.invalidate(user.id);
 
     const embed = new EmbedBuilder()
-      .setDescription(code(user.email))
       .setThumbnail(user.avatarUrl ?? "")
       .setURL(user.url)
       .setTimestamp()
-      .setTitle(user.name);
+      .setTitle(Linear.helpers.userToStringNonEmail(user));
 
     await msg.reply({ embeds: [embed] });
   },
