@@ -68,6 +68,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    ports:
+      - 8288:8288
     volumes:
       - linear-data:/data
 
@@ -79,7 +81,7 @@ volumes:
 # .env
 
 FLUXER_TOKEN=0000000000000000000.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx # change this!
-DATABASE_FILENAME=data/linear.sqlite
+DATABASE_FILENAME=/data/linear.sqlite
 PORT=8288
 
 LINEAR_CLIENT_ID=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa # change this!
