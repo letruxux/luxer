@@ -22,7 +22,7 @@ export const login = {
         new EmbedBuilder()
           .setTitle("Click here to login with `linear.app`")
           .setDescription(bold("Make sure to select the correct workspace!"))
-          .setThumbnail("https://i.ibb.co/s9bgRyTy/chrome-Hmjrp4-NPXc.png")
+          .setImage("https://i.ibb.co/s9bgRyTy/chrome-Hmjrp4-NPXc.png")
           .setURL(authUrl.toString())
           .setColor(0x00ff00),
       ),

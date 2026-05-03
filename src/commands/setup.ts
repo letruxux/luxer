@@ -42,7 +42,11 @@ export const setup = {
     const teamList = teams.map((team, i) => `${emojis[i]} **${team.name}**`).join("\n");
 
     const message = await channel.send(
-      embedOf(new EmbedBuilder().setTitle("Select your team").setDescription(teamList)),
+      embedOf(
+        new EmbedBuilder()
+          .setTitle("Select this community's team")
+          .setDescription(teamList),
+      ),
     );
 
     for (const emoji of emojis) {
