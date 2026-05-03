@@ -35,15 +35,57 @@ Docker image: `ghcr.io/letruxux/luxer:latest`
 - `DATABASE_FILENAME`: Optional - default: `linear.sqlite`
 - `PORT`: Optional - default: `8288`
 
-### Linear app setup
+### Fluxer bot setup
 
 Go to [https://linear.app/settings/api/applications/new](https://linear.app/settings/api/applications/new) and create a new application.
+
+Input any name, then under "Bot token", click "Regenerate", then copy the token.
+
+Paste the token as environment variable `FLUXER_TOKEN`.
+
+#### Invite the bot
+
+In the same bot page in the developers settings, scroll to "OAuth2 URL Builder", select `bot` as scope, give "Administrator" permissions (or the specific permissions you want) and click the copy button next to the Authorize URL.
+
+### Fluxer app setup
+
+Open the Fluxer desktop app (or web app) and go to Settings, scroll all the way down to "Developers" > "Applcations" and click "Create Application".
 
 The only fields that matter are Callback URLs, they have to be the same as the `LINEAR_REDIRECT_URI` env variable.
 
 Enable `Public` and `Client credentials`.
 
 Then, copy the Client ID and Client Secret. You'll need to set them as the environment variables `LINEAR_CLIENT_ID` and `LINEAR_CLIENT_SECRET`.
+
+### Example setup with Docker
+
+```yaml
+# compose.yaml
+
+services:
+  luxer:
+    image: ghcr.io/letruxux/luxer:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - linear-data:/data
+
+volumes:
+  linear-data:
+```
+
+```bash
+# .env
+
+FLUXER_TOKEN=0000000000000000000.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx # change this!
+DATABASE_FILENAME=data/linear.sqlite
+PORT=8288
+
+LINEAR_CLIENT_ID=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa # change this!
+LINEAR_CLIENT_SECRET=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa # change this!
+LINEAR_REDIRECT_URI=https://luxer.example.com/callback # change this!
+```
 
 ## Notes
 
