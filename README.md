@@ -37,7 +37,7 @@ Docker image: `ghcr.io/letruxux/luxer:latest`
 
 ### Fluxer bot setup
 
-Go to [https://linear.app/settings/api/applications/new](https://linear.app/settings/api/applications/new) and create a new application.
+Open the Fluxer desktop app (or web app) and go to Settings, scroll all the way down to "Developers" > "Applcations" and click "Create Application".
 
 Input any name, then under "Bot token", click "Regenerate", then copy the token.
 
@@ -47,9 +47,9 @@ Paste the token as environment variable `FLUXER_TOKEN`.
 
 In the same bot page in the developers settings, scroll to "OAuth2 URL Builder", select `bot` as scope, give "Administrator" permissions (or the specific permissions you want) and click the copy button next to the Authorize URL.
 
-### Fluxer app setup
+### Linear app setup
 
-Open the Fluxer desktop app (or web app) and go to Settings, scroll all the way down to "Developers" > "Applcations" and click "Create Application".
+Go to [https://linear.app/settings/api/applications/new](https://linear.app/settings/api/applications/new) and create a new application.
 
 The only fields that matter are Callback URLs, they have to be the same as the `LINEAR_REDIRECT_URI` env variable.
 
